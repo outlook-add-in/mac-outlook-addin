@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:type="MailApp">
+  
+  <!-- Unique ID - Keep this consistent -->
+  <Id>12345678-90ab-cdef-1234-567890abcdef</Id>
+  
+  <!-- Version number -->
+  <Version>1.0.0.0</Version>
+  
+  <!-- Provider name (your organization) -->
+  <ProviderName>PayTM</ProviderName>
+  
+  <!-- Default language -->
+  <DefaultLocale>en-US</DefaultLocale>
+  
+  <!-- User-visible name -->
+  <DisplayName DefaultValue="PayTM Safe Send"/>
+  
+  <!-- Description -->
+  <Description DefaultValue="Prevents accidental sending to external (non-PayTM) recipients. Shows warning banner and confirmation dialog before sending."/>
+  
+  <!-- Supported hosts -->
+  <Hosts>
+    <Host xsi:type="MailHost">
+      <!-- Desktop (Outlook on Mac/Windows) -->
+      <DesktopFormFactor>
+        <!-- References functions.html for event handlers -->
+        <FunctionFile resid="functionFile"/>
+        
+        <!-- Message compose command surface -->
+        <ExtensionPoint xsi:type="MessageComposeCommandSurface">
+          <OfficeTab id="TabDefault">
+            <Group id="msgComposeGroup">
+              <Label resid="groupLabel"/>
+              
+              <!-- Button to open taskpane -->
+              <Control xsi:type="Button" id="composeButton">
+                <Label resid="buttonLabel"/>
+                <Supertip>
+                  <Title resid="buttonLabel"/>
+                  <Description resid="buttonDesc"/>
+                </Supertip>
+                <Action xsi:type="ShowTaskPane">
+                  <SourceLocation resid="taskPaneUrl"/>
+                </Action>
+              </Control>
+            </Group>
+          </OfficeTab>
+        </ExtensionPoint>
+      </DesktopFormFactor>
+    </Host>
+  </Hosts>
+
+  <!-- Required permissions -->
+  <Permissions>ReadWriteItem</Permissions>
+
+  <!-- Version overrides for newer Office versions -->
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+                    xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="MailHost">
+        <DesktopFormFactor>
+          <!-- Functions for event handlers -->
+          <FunctionFile resid="functionFile"/>
+          
+          <!-- Message compose UI -->
+          <ExtensionPoint xsi:type="MessageComposeCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="msgComposeGroup">
+                <Label resid="groupLabel"/>
+                <Control xsi:type="Button" id="composeButton">
+                  <Label resid="buttonLabel"/>
+                  <Supertip>
+                    <Title resid="buttonLabel"/>
+                    <Description resid="buttonDesc"/>
+                  </Supertip>
+                  <Action xsi:type="ShowTaskPane">
+                    <SourceLocation resid="taskPaneUrl"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+
+    <!-- Resources: URLs and strings -->
+    <Resources>
+      <!-- Images for buttons (as base64 SVG) -->
+      <bt:Images>
+        <!-- 16x16 icon -->
+        <bt:Image id="icon16" 
+                  DefaultValue="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIGZpbGw9IiNGRjMzMzMiIHJ4PSIyIi8+PHRleHQgeD0iOCIgeT0iOCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEwIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPui4gjwvdGV4dD48L3N2Zz4="/>
+        
+        <!-- 32x32 icon -->
+        <bt:Image id="icon32" 
+                  DefaultValue="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIGZpbGw9IiNGRjMzMzMiIHJ4PSI0Ii8+PHRleHQgeD0iMTYiIHk9IjE2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+ii4I8L3RleHQ+PC9zdmc+"/>
+        
+        <!-- 80x80 icon -->
+        <bt:Image id="icon80" 
+                  DefaultValue="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iODAiIGZpbGw9IiNGRjMzMzMiIHJ4PSI4Ii8+PHRleHQgeD0iNDAiIHk9IjQwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNTAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+ii4I8L3RleHQ+PC9zdmc+"/>
+      </bt:Images>
+
+      <!-- URLs for HTML files -->
+      <bt:Urls>
+        <!-- Function file with event handlers -->
+        <bt:Url id="functionFile" 
+                DefaultValue="https://raw.githubusercontent.com/YOUR-ORG/outlook-safesend/main/functions.html"/>
+        
+        <!-- Taskpane with warning banner UI -->
+        <bt:Url id="taskPaneUrl" 
+                DefaultValue="https://raw.githubusercontent.com/YOUR-ORG/outlook-safesend/main/taskpane.html"/>
+      </bt:Urls>
+
+      <!-- Short strings (used in UI) -->
+      <bt:ShortStrings>
+        <bt:String id="groupLabel" DefaultValue="Safety"/>
+        <bt:String id="buttonLabel" DefaultValue="Check Recipients"/>
+        <bt:String id="buttonDesc" DefaultValue="Verify email recipients are from trusted PayTM domain"/>
+      </bt:ShortStrings>
+
+      <!-- Long strings -->
+      <bt:LongStrings>
+        <bt:String id="functionsFile" DefaultValue="functions.html"/>
+        <bt:String id="taskPaneFile" DefaultValue="taskpane.html"/>
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>

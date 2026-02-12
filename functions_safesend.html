@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>PayTM Safe Send - Event Handler</title>
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+</head>
+<body>
+    <script>
+        // Configuration
+        const CONFIG = {
+            trustedDomains: ['paytm.com'],
+            allowlist: [
+                // Add trusted partner domains here
+                // 'partner.com',
+                // 'vendor.com'
+            ],
+            blockMode: 'warn', // 'warn' or 'block'
+            addSubjectTag: true,
+            addWarningBanner: true,
+            logEnabled: true
+        };
+
+        // Initialize add-in
+        Office.onReady((info) => {
+            if (info.host === Office.HostType.Outlook) {
+                console.log('PayTM Safe Send initialized');
+                registerEventHandlers();
+            }
+        });
+
+        /**
+         * Register event handlers for ItemSend
+         */
+        function registerEventHandlers() {
+            // This is called when add-in loads
+            console.log('Event handlers registered');
+        }
+
+        /**
+         * Main handler: Called before email is sent
+         * This is the equivalent of VSTO ItemSend event
+         */
+        Office.onReady(() => {
+            // For new Outlook on Mac, we use ItemSend event
+            Office.actions.associate('onItemSend', handleItemSend);
+        });
+
+        /**
+         * Handle ItemSend event - MAIN LOGIC
+         * This is equivalent to VSTO Application.ItemSend event handler
+         */
+        function handleItemSend(event) {
+            console.log('[PayTM Safe Send] ItemSend event triggered');
+
+            const item = event.item;
+
+            // Get all recipients
+            item.to.getAsync((toResult) => {
+                if (toResult.status !== Office.AsyncResultStatus.Succeeded) {
+                    completeItemSend(event);
+                    return;
+                }
+
+                const toRecipients = toResult.value || [];
+
+                item.cc.getAsync((ccResult) => {
+                    const ccRecipients = ccResult.value || [];
+
+                    item.bcc.getAsync((bccResult) => {
+                        const bccRecipients = bccResult.value || [];
+
+                        // Combine all recipients
+                        const allRecipients = [
+                            ...toRecipients,
+                            ...ccRecipients,
+                            ...bccRecipients
+                        ];
+
+                        // Check recipients
+                        const externalRecipients = checkRecipients(allRecipients);
+
+                        if (externalRecipients.length > 0) {
+                            // External recipients detected
+                            log(`External recipients detected: ${externalRecipients.map(r => r.email).join(', ')}`);
+
+                            if (CONFIG.blockMode === 'warn') {
+                                // Show warning and let user decide
+                                showWarningDialog(externalRecipients, (proceed) => {
+                                    if (proceed) {
+                                        // Add tag if enabled
+                                        if (CONFIG.addSubjectTag) {
+                                            addSubjectTag(item, event);
+                                        } else {
+                                            completeItemSend(event);
+                                        }
+                                    } else {
+                                        // Block send
+                                        event.completed({ allowEvent: false });
+                                        log('Send blocked by user');
+                                    }
+                                });
+                            } else if (CONFIG.blockMode === 'block') {
+                                // Block immediately
+                                event.completed({ allowEvent: false });
+                                showBlockDialog(externalRecipients);
+                                log('Send blocked - external recipients detected');
+                            }
+                        } else {
+                            // All recipients are safe
+                            log('All recipients verified - safe domain only');
+                            completeItemSend(event);
+                        }
+                    });
+                });
+            });
+        }
+
+        /**
+         * Check if recipients are from trusted domains
+         * @param {Array} recipients - Recipients to check
+         * @returns {Array} - External recipients
+         */
+        function checkRecipients(recipients) {
+            const externalRecipients = [];
+
+            recipients.forEach((recipient) => {
+                const email = recipient.emailAddress.toLowerCase();
+                const domain = extractDomain(email);
+
+                // Check if domain is trusted
+                const isTrusted = CONFIG.trustedDomains.includes(domain) ||
+                                 CONFIG.allowlist.includes(domain);
+
+                if (!isTrusted) {
+                    externalRecipients.push({
+                        email: email,
+                        domain: domain,
+                        name: recipient.displayName || email
+                    });
+                }
+            });
+
+            return externalRecipients;
+        }
+
+        /**
+         * Extract domain from email
+         */
+        function extractDomain(email) {
+            if (email && email.includes('@')) {
+                return email.split('@')[1].toLowerCase();
+            }
+            return email.toLowerCase();
+        }
+
+        /**
+         * Show warning dialog to user
+         * Equivalent to WinForms MessageBox in VSTO
+         */
+        function showWarningDialog(externalRecipients, callback) {
+            const dialogUrl = `data:text/html,
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto; padding: 20px; }
+        .warning { color: #d32f2f; font-size: 18px; margin-bottom: 15px; }
+        .recipients { background: #fff3e0; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .recipient-item { padding: 8px 0; border-bottom: 1px solid #ffe0b2; }
+        .recipient-item:last-child { border-bottom: none; }
+        .domain { color: #f57c00; font-weight: bold; }
+        .buttons { margin-top: 20px; text-align: right; }
+        button { padding: 10px 20px; margin-left: 10px; border: none; border-radius: 4px; cursor: pointer; }
+        .proceed { background: #d32f2f; color: white; }
+        .cancel { background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <div class="warning">⚠️ External Recipients Detected</div>
+    <p>You are sending to recipients outside the <strong>paytm.com</strong> domain:</p>
+    
+    <div class="recipients">
+        ${externalRecipients.map(r => `
+            <div class="recipient-item">
+                ${r.name || r.email} <span class="domain">(${r.domain})</span>
+            </div>
+        `).join('')}
+    </div>
+    
+    <p><strong>Be careful!</strong> Verify these recipients are intended before sending.</p>
+    
+    <div class="buttons">
+        <button class="cancel" onclick="window.parent.cancelSend()">Cancel Send</button>
+        <button class="proceed" onclick="window.parent.proceedSend()">Send Anyway</button>
+    </div>
+    
+    <script>
+        window.cancelSend = () => parent.postMessage({ action: 'cancel' }, '*');
+        window.proceedSend = () => parent.postMessage({ action: 'proceed' }, '*');
+    </script>
+</body>
+</html>`;
+
+            // Show dialog using Office.ui
+            Office.context.ui.displayDialogAsync(dialogUrl, { height: 50, width: 50 },
+                (result) => {
+                    if (result.status === Office.AsyncResultStatus.Succeeded) {
+                        const dialog = result.value;
+                        dialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
+                            const message = JSON.parse(arg.message);
+                            dialog.close();
+                            callback(message.action === 'proceed');
+                        });
+                    } else {
+                        callback(false);
+                    }
+                }
+            );
+        }
+
+        /**
+         * Show block dialog
+         */
+        function showBlockDialog(externalRecipients) {
+            const message = `Cannot send email to external recipients:\n${externalRecipients.map(r => r.email).join(', ')}\n\nOnly paytm.com addresses are allowed.`;
+            alert(message);
+        }
+
+        /**
+         * Add subject tag to email
+         * Example: [External] prefix
+         */
+        function addSubjectTag(item, event) {
+            item.subject.getAsync((result) => {
+                if (result.status === Office.AsyncResultStatus.Succeeded) {
+                    let currentSubject = result.value;
+                    if (!currentSubject.includes('[External]')) {
+                        currentSubject = `[External] ${currentSubject}`;
+                        item.subject.setAsync(currentSubject, () => {
+                            completeItemSend(event);
+                            log(`Subject tagged: ${currentSubject}`);
+                        });
+                    } else {
+                        completeItemSend(event);
+                    }
+                } else {
+                    completeItemSend(event);
+                }
+            });
+        }
+
+        /**
+         * Complete the send operation
+         */
+        function completeItemSend(event) {
+            event.completed({ allowEvent: true });
+        }
+
+        /**
+         * Logging function
+         */
+        function log(message) {
+            if (CONFIG.logEnabled) {
+                const timestamp = new Date().toLocaleTimeString();
+                console.log(`[${timestamp}] ${message}`);
+            }
+        }
+
+        /**
+         * Attach warning banner to compose area
+         * (This would require form regions in classic VSTO)
+         */
+        function addComposeBanner(externalRecipients) {
+            // This functionality would be in taskpane.html
+            const message = {
+                type: 'externalRecipients',
+                recipients: externalRecipients
+            };
+            Office.onReady(() => {
+                // Send message to taskpane
+                if (window.parent !== window) {
+                    window.parent.postMessage(message, '*');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,492 @@
+═══════════════════════════════════════════════════════════════════════════════
+  PayTM Safe Send - Windows VSTO Add-in
+  Complete Build, Package & Deployment Guide
+═══════════════════════════════════════════════════════════════════════════════
+
+WHAT IS VSTO?
+═════════════════════════════════════════════════════════════════════════════
+
+VSTO = Visual Studio Tools for Office
+• Native C# code running in Outlook process
+• Full access to Outlook object model
+• Hooks ItemSend event (before email is sent)
+• Can block, modify, or allow send
+• Windows-only (classic Outlook)
+• COM add-in architecture
+
+═════════════════════════════════════════════════════════════════════════════
+
+HOW IT WORKS:
+═════════════════════════════════════════════════════════════════════════════
+
+1. User composes email and clicks Send
+2. Outlook fires ItemSend event
+3. Our VSTO add-in intercepts the event
+4. We parse To/Cc/Bcc recipients
+5. Check if any domain ≠ paytm.com
+6. If external found:
+   - Show warning dialog
+   - User chooses: Send / Cancel
+   - If Cancel → event.Cancel = true (blocks send)
+   - If Send → allow with optional tagging
+7. Email sent or blocked
+
+═════════════════════════════════════════════════════════════════════════════
+
+FEATURES:
+═════════════════════════════════════════════════════════════════════════════
+
+✅ ItemSend Event Hook
+   - Triggered before email send
+   - Full control over send action
+   - Can block or allow with confirmation
+
+✅ Recipient Analysis
+   - Parses To, Cc, Bcc fields
+   - Extracts domain names
+   - Identifies external recipients
+
+✅ Configurable Policies
+   - Trusted domains (default: paytm.com)
+   - Allow-list for partners
+   - Block mode (warn vs hard block)
+
+✅ User Actions
+   - Yes: Send with confirmation
+   - No: Send and don't warn again
+   - Cancel: Block send
+
+✅ Optional Features
+   - Auto-tag subject with [External]
+   - Add warning footer to email
+   - Console logging for debugging
+
+✅ Cross-Platform Mailbox Support
+   - Exchange accounts
+   - IMAP/POP3 accounts
+   - Gmail in Outlook
+   - Microsoft 365 accounts
+
+═════════════════════════════════════════════════════════════════════════════
+
+PREREQUISITES:
+═════════════════════════════════════════════════════════════════════════════
+
+✓ Windows 10/11
+✓ Outlook 2016+ or Microsoft 365
+✓ .NET Framework 4.7.2+
+✓ Visual Studio 2019+ (for building)
+✓ Office Developer Tools for Visual Studio
+✓ Administrator access (for installation)
+
+═════════════════════════════════════════════════════════════════════════════
+
+BUILD INSTRUCTIONS:
+═════════════════════════════════════════════════════════════════════════════
+
+STEP 1: Set Up Development Environment
+──────────────────────────────────────
+
+1. Install Visual Studio 2019+
+   https://visualstudio.microsoft.com/downloads/
+
+2. During installation, select:
+   ✓ ".NET Framework 4.7.2 runtime"
+   ✓ "Office/SharePoint development"
+
+3. Install Office Developer Tools:
+   https://aka.ms/OfficeToolsForVS
+
+4. Install Outlook 2016+ or Microsoft 365
+
+STEP 2: Create VSTO Project
+────────────────────────────
+
+1. Open Visual Studio
+2. File → New → Project
+3. Search: "Outlook Add-in"
+4. Select: "Outlook Add-in (VSTO)"
+5. Choose:
+   - Name: PayTMSafeSend
+   - Framework: .NET Framework 4.7.2
+   - Outlook version: Outlook 2016+
+6. Click Create
+
+STEP 3: Replace Code
+─────────────────────
+
+1. Open ThisAddIn.cs (main file)
+2. Replace entire content with: ThisAddIn_SafeSend.cs (provided)
+3. Save file
+
+STEP 4: Add References
+──────────────────────
+
+Right-click project → Add Reference:
+✓ Microsoft.Office.Interop.Outlook
+✓ Microsoft.Office.Tools.Common
+✓ System.Windows.Forms
+
+STEP 5: Build Project
+──────────────────────
+
+1. Build → Build Solution
+2. Choose: Release configuration
+3. Should compile without errors
+
+Output: 
+  bin\Release\PayTMSafeSend.dll
+
+═════════════════════════════════════════════════════════════════════════════
+
+PACKAGE FOR DISTRIBUTION:
+═════════════════════════════════════════════════════════════════════════════
+
+OPTION 1: Installer (MSI) - Recommended
+─────────────────────────────────────────
+
+1. In Visual Studio, right-click project
+2. Select "Publish"
+3. Choose target location (e.g., local folder)
+4. This creates installer
+
+Output:
+  • PayTMSafeSend.vsto
+  • Setup.exe
+  • .NET Framework installer
+
+Users run Setup.exe to install.
+
+OPTION 2: Direct Registry Deployment
+──────────────────────────────────────
+
+For IT deployment:
+
+1. Build DLL in Release mode
+2. Copy DLL to fixed location:
+   C:\Program Files\PayTMSafeSend\PayTMSafeSend.dll
+
+3. Create registry entry:
+   HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Office\Outlook\Addins\PayTMSafeSend
+
+4. Add registry values:
+   Name: LoadBehavior (DWORD) = 3
+   Name: Description (String) = "PayTM Safe Send"
+   Name: FriendlyName (String) = "PayTM Safe Send"
+   Name: Manifest (String) = file path to DLL
+
+5. Restart Outlook
+
+═════════════════════════════════════════════════════════════════════════════
+
+DEPLOYMENT OPTIONS:
+═════════════════════════════════════════════════════════════════════════════
+
+OPTION 1: Manual Distribution
+──────────────────────────────
+
+1. Create MSI installer (see above)
+2. Email to users or upload to file share
+3. Users run Setup.exe
+4. Outlook automatically loads add-in
+
+Benefits:
+  ✓ Simple for small organizations
+  ✓ User can uninstall if needed
+  
+Drawbacks:
+  ✗ Manual for each user
+  ✗ No version control
+
+OPTION 2: Group Policy (Windows Domain)
+─────────────────────────────────────────
+
+For managed Windows domains:
+
+1. Create MSI installer
+2. Place on network share
+3. Use Group Policy to deploy
+4. Automatically installs on login
+
+Benefits:
+  ✓ Organization-wide deployment
+  ✓ Version control
+  ✓ Easy updates
+  ✓ User can't uninstall
+  
+Drawbacks:
+  ✗ Requires domain setup
+
+Steps:
+  1. Create MSI
+  2. Place on: \\domain\share\addins\PayTMSafeSend.msi
+  3. Open Group Policy Editor (gpedit.msc)
+  4. Navigate: Computer Config → Software Settings → Application Deployment
+  5. New Package → Select MSI file
+  6. Assign to domain computers
+
+OPTION 3: Microsoft Intune (Microsoft 365)
+───────────────────────────────────────────
+
+For cloud-managed devices:
+
+1. Create MSI installer
+2. Upload to Intune
+3. Assign to user/device groups
+4. Automatically deployed to devices
+
+Benefits:
+  ✓ Cloud-based management
+  ✓ Works with hybrid devices
+  ✓ Easy rollback
+  
+Drawbacks:
+  ✗ Requires Intune licensing
+
+Steps:
+  1. Sign in: https://intune.microsoft.com
+  2. Apps → Windows apps → Add
+  3. Upload MSI file
+  4. Assign to group
+  5. Devices receive deployment automatically
+
+OPTION 4: Configuration Manager (SCCM)
+─────────────────────────────────────────
+
+For large enterprises:
+
+1. Create MSI
+2. Import into ConfigMgr
+3. Create deployment package
+4. Deploy to device collections
+
+═════════════════════════════════════════════════════════════════════════════
+
+CONFIGURATION:
+═════════════════════════════════════════════════════════════════════════════
+
+Edit configuration in C# code (ThisAddIn_SafeSend.cs):
+
+```csharp
+// Trusted domains
+TrustedDomains = new List<string> { "paytm.com" }
+
+// Partners to exclude from warnings
+AllowList = new List<string>
+{
+    // "partner1.com",
+    // "partner2.com"
+}
+
+// Block mode: true = warn, false = hard block
+BlockMode = true
+
+// Tag subject with [External]
+AddSubjectTag = true
+
+// Add warning footer to email
+AddWarningFooter = false
+
+// Enable logging
+LogEnabled = true
+```
+
+To update in production:
+1. Edit code
+2. Rebuild DLL
+3. Redeploy MSI
+4. Users get updated version
+
+═════════════════════════════════════════════════════════════════════════════
+
+TESTING:
+═════════════════════════════════════════════════════════════════════════════
+
+STEP 1: Install locally
+───────────────────────
+
+1. Run Setup.exe
+2. Follow wizard
+3. Restart Outlook
+
+STEP 2: Verify installation
+────────────────────────────
+
+1. Open Outlook
+2. File → Options → Trust Center → Trust Center Settings
+3. Look for "PayTM Safe Send" in add-ins list
+4. Status should be "Active"
+
+STEP 3: Test functionality
+──────────────────────────
+
+1. Compose new email
+2. Add recipient: test@gmail.com
+3. Type subject and body
+4. Click Send
+5. Should see warning dialog
+6. Click "No" to block send
+7. Should not send
+
+Test Cases:
+  ✓ Send to paytm.com → no warning
+  ✓ Send to external → warning appears
+  ✓ Click Yes → email sends
+  ✓ Click No → email blocked
+  ✓ Multiple recipients → correct domain counting
+
+STEP 4: Check logs
+──────────────────
+
+Open: %APPDATA%\PayTMSafeSend\log.txt
+
+Should contain entries like:
+  [2024-02-13 10:30:45] PayTM Safe Send Add-in initialized
+  [2024-02-13 10:31:12] ItemSend triggered for: Test Email
+  [2024-02-13 10:31:12] External recipients detected: test@gmail.com
+  [2024-02-13 10:31:15] Send blocked by user
+
+═════════════════════════════════════════════════════════════════════════════
+
+TROUBLESHOOTING:
+═════════════════════════════════════════════════════════════════════════════
+
+ISSUE: Add-in not loading
+FIX:
+  1. Check: File → Options → Trust Center → Trusted Add-ins
+  2. Should be enabled
+  3. Check logs: %APPDATA%\PayTMSafeSend\log.txt
+  4. Try: Outlook /cleanaddins
+  5. Reinstall add-in
+
+ISSUE: Warning dialog not showing
+FIX:
+  1. Verify add-in is loaded
+  2. Check Outlook version (must be 2016+)
+  3. Try composing to external address
+  4. Check Windows Event Viewer for errors
+  5. Enable logging and check log file
+
+ISSUE: Add-in crashes Outlook
+FIX:
+  1. Disable add-in: Trust Center → Disabled Items
+  2. Check logs for exception
+  3. Update to latest .NET Framework
+  4. Reinstall add-in
+  5. Report error
+
+ISSUE: Can't install - "Administrator required"
+FIX:
+  1. Right-click Setup.exe → "Run as administrator"
+  2. Restart computer
+  3. Try again
+
+═════════════════════════════════════════════════════════════════════════════
+
+UNINSTALLATION:
+═════════════════════════════════════════════════════════════════════════════
+
+User Level:
+  1. Control Panel → Programs → Programs and Features
+  2. Find "PayTM Safe Send"
+  3. Click Uninstall
+  4. Restart Outlook
+
+Admin Level (Remove from all):
+  1. Group Policy Editor
+  2. Find deployment policy
+  3. Delete assignment
+  4. User machines auto-remove on next update
+
+═════════════════════════════════════════════════════════════════════════════
+
+SECURITY CONSIDERATIONS:
+═════════════════════════════════════════════════════════════════════════════
+
+✓ Code signing
+  - Sign DLL with certificate
+  - Prevents tampering
+  
+✓ No email content access
+  - Only reads To/Cc/Bcc fields
+  - Does not access message body
+  
+✓ No credential stealing
+  - No password prompts
+  - No data transmission
+  
+✓ User consent required
+  - Warning dialog before send
+  - User explicitly confirms
+  
+✓ Audit trail
+  - Logs all actions
+  - Can be sent to SIEM
+
+═════════════════════════════════════════════════════════════════════════════
+
+PRODUCTION CHECKLIST:
+═════════════════════════════════════════════════════════════════════════════
+
+Before deploying:
+
+☑ Code reviewed for security
+☑ All test cases pass
+☑ Logging enabled for auditing
+☑ Configuration finalized
+☑ DLL code signed
+☑ MSI installer created
+☑ Installation tested on fresh machine
+☑ Uninstall tested
+☑ Error handling verified
+☑ Documentation created
+☑ Deployment plan written
+☑ Rollback plan in place
+☑ IT/Security approval obtained
+☑ Scheduled pilot testing
+
+═════════════════════════════════════════════════════════════════════════════
+
+FILES PROVIDED:
+═════════════════════════════════════════════════════════════════════════════
+
+1. ThisAddIn_SafeSend.cs
+   - Main C# source code
+   - ItemSend event handler
+   - Recipient parsing logic
+   - Dialog implementation
+
+2. PayTMSafeSend.csproj
+   - Project file for Visual Studio
+   - Build configuration
+   - References
+
+3. This guide (VSTO_WINDOWS_GUIDE.txt)
+   - Complete instructions
+
+═════════════════════════════════════════════════════════════════════════════
+
+NEXT STEPS:
+═════════════════════════════════════════════════════════════════════════════
+
+1. Set up Visual Studio environment
+2. Create new VSTO project
+3. Copy provided code
+4. Build and test locally
+5. Create MSI installer
+6. Pilot test with small group
+7. Deploy to organization
+8. Monitor logs for issues
+9. Update policies as needed
+
+═════════════════════════════════════════════════════════════════════════════
+
+SUPPORT:
+═════════════════════════════════════════════════════════════════════════════
+
+Documentation:
+  • VSTO: https://learn.microsoft.com/office/vsto/
+  • Outlook API: https://learn.microsoft.com/office/vsto/outlook-object-model
+  • ItemSend: https://learn.microsoft.com/office/vsto/how-to-prevent-outlook-from-displaying-a-form-region
+
+═════════════════════════════════════════════════════════════════════════════
