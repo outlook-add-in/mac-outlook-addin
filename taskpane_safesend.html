@@ -2,259 +2,55 @@
 <html>
 <head>
     <meta charset="UTF-8" />
-    <title>PayTM Safe Send - Taskpane</title>
-    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <title>PayTM Safe Send</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
-            padding: 0;
-            min-height: 100vh;
-        }
-
-        .container {
-            padding: 16px;
-        }
-
-        .header {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 16px;
-            padding: 12px;
-            background: white;
-            border-radius: 8px;
-            border-left: 4px solid #ff6b6b;
-        }
-
-        /* Warning Banner */
-        .warning-banner {
-            display: none;
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-            color: white;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .warning-banner.show {
-            display: block;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .warning-title {
-            font-weight: 700;
-            font-size: 15px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .recipients-list {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 12px;
-            font-size: 12px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .recipient-item {
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-            word-break: break-all;
-        }
-
-        .recipient-item:last-child {
-            border-bottom: none;
-        }
-
-        .recipient-icon {
-            margin-right: 6px;
-        }
-
-        .warning-message {
-            font-size: 12px;
-            line-height: 1.5;
-            margin-bottom: 12px;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 4px;
-        }
-
-        /* Safe Banner */
-        .safe-banner {
-            display: none;
-            background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);
-            color: white;
-            padding: 14px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            font-size: 13px;
-            font-weight: 600;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .safe-banner.show {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Status Panel */
-        .status-panel {
-            background: white;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 12px;
-            border: 1px solid #e0e0e0;
-            font-size: 12px;
-        }
-
-        .status-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .status-row:last-child {
-            border-bottom: none;
-        }
-
-        .status-label {
-            color: #666;
-            font-weight: 500;
-        }
-
-        .status-value {
-            font-weight: 700;
-            color: #333;
-        }
-
-        .status-value.warning {
-            color: #ff6b6b;
-        }
-
-        .status-value.safe {
-            color: #51cf66;
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #999;
-        }
-
-        .empty-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-
-        .empty-text {
-            font-size: 12px;
-            line-height: 1.6;
-        }
-
-        /* Debug Panel */
-        .debug-panel {
-            background: #f0f0f0;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 10px;
-            margin-top: 12px;
-            font-family: monospace;
-            font-size: 10px;
-            color: #333;
-            max-height: 150px;
-            overflow-y: auto;
-            display: none;
-        }
-
-        .debug-panel.show {
-            display: block;
-        }
-
-        .debug-log {
-            padding: 4px 0;
-            border-bottom: 1px solid #ddd;
-            word-break: break-all;
-        }
-
-        .debug-log:last-child {
-            border-bottom: none;
-        }
-
-        .debug-error {
-            color: #d32f2f;
-        }
-
-        .debug-success {
-            color: #388e3c;
-        }
-
-        .debug-info {
-            color: #1976d2;
-        }
-
-        /* Disable button */
-        .debug-btn {
-            margin-top: 12px;
-            padding: 8px 12px;
-            background: #f0f0f0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
-        }
-
-        .debug-btn:hover {
-            background: #e0e0e0;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 0; min-height: 100vh; }
+        .container { padding: 16px; }
+        .header { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 16px; padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #ff6b6b; }
+        
+        .warning-banner { display: none; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); color: white; padding: 16px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3); }
+        .warning-banner.show { display: block; }
+        .warning-title { font-weight: 700; font-size: 15px; margin-bottom: 12px; }
+        .recipients-list { background: rgba(255, 255, 255, 0.2); border-radius: 6px; padding: 12px; margin-bottom: 12px; font-size: 12px; max-height: 200px; overflow-y: auto; }
+        .recipient-item { padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.15); word-break: break-all; }
+        .recipient-item:last-child { border-bottom: none; }
+        .warning-message { font-size: 12px; line-height: 1.5; margin-bottom: 12px; padding: 12px; background: rgba(0, 0, 0, 0.1); border-radius: 4px; }
+        
+        .safe-banner { display: none; background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%); color: white; padding: 14px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; font-weight: 600; }
+        .safe-banner.show { display: flex; align-items: center; gap: 8px; }
+        
+        .status-panel { background: white; border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid #e0e0e0; font-size: 12px; }
+        .status-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+        .status-row:last-child { border-bottom: none; }
+        .status-label { color: #666; font-weight: 500; }
+        .status-value { font-weight: 700; color: #333; }
+        .status-value.warning { color: #ff6b6b; }
+        .status-value.safe { color: #51cf66; }
+        
+        .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+        .empty-icon { font-size: 48px; margin-bottom: 16px; }
+        .empty-text { font-size: 12px; line-height: 1.6; }
+        
+        .status-indicator { margin-top: 20px; padding: 12px; background: #e3f2fd; border-radius: 6px; border-left: 4px solid #1976d2; font-size: 11px; color: #1565c0; }
+        .status-indicator.success { background: #e8f5e9; border-left-color: #51cf66; color: #2e7d32; }
+        .status-indicator.error { background: #ffebee; border-left-color: #ff6b6b; color: #c62828; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">⚠️ PayTM Safe Send</div>
-
-        <!-- Warning Banner -->
+        
         <div id="warningBanner" class="warning-banner">
-            <div class="warning-title">
-                <span>⚠️ External Recipients</span>
-            </div>
+            <div class="warning-title">⚠️ External Recipients</div>
             <div class="recipients-list" id="recipientsList"></div>
-            <div class="warning-message">
-                Only paytm.com is trusted. Verify these recipients before sending!
-            </div>
+            <div class="warning-message">Only paytm.com is trusted. Verify these recipients before sending!</div>
         </div>
-
-        <!-- Safe Banner -->
+        
         <div id="safeBanner" class="safe-banner">
             <span>✓ All recipients verified - safe domain only</span>
         </div>
-
-        <!-- Status Panel -->
+        
         <div id="statusPanel" class="status-panel" style="display: none;">
             <div class="status-row">
                 <span class="status-label">Total Recipients:</span>
@@ -269,182 +65,215 @@
                 <span class="status-value warning" id="externalCount">0</span>
             </div>
         </div>
-
-        <!-- Empty State -->
+        
         <div id="emptyState" class="empty-state">
             <div class="empty-icon">✉️</div>
-            <div class="empty-text">
-                Add recipients to your email.<br/>
-                SafeSend will verify they are from trusted domains.
-            </div>
+            <div class="empty-text">Add recipients to your email.<br/>SafeSend will verify they are from trusted domains.</div>
         </div>
-
-        <!-- Debug Panel -->
-        <div id="debugPanel" class="debug-panel">
-            <div style="padding: 8px 0; font-weight: bold; border-bottom: 1px solid #ddd; margin-bottom: 8px;">Debug Log:</div>
-            <div id="debugLog"></div>
-            <button class="debug-btn" onclick="clearDebugLog()">Clear Log</button>
+        
+        <div id="statusIndicator" class="status-indicator">
+            🔄 Loading... Please wait.
         </div>
-
-        <button class="debug-btn" onclick="toggleDebug()" style="width: 100%; margin-top: 12px;">Show Debug Info</button>
     </div>
 
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
     <script>
+        console.log('[SafeSend] Main script loaded');
+        
         const TRUSTED_DOMAINS = ['paytm.com'];
-        let debugEnabled = false;
         let monitoringInterval = null;
+        let isOfficeReady = false;
+        let isOutlook = false;
 
-        // Initialize
-        Office.onReady((info) => {
-            log('[INIT] Office ready', 'success');
-            if (info.host === Office.HostType.Outlook) {
-                log('[INIT] Outlook detected', 'success');
-                log('[INIT] Starting monitoring...', 'info');
-                startMonitoring();
-            } else {
-                log(`[ERROR] Not Outlook: ${info.host}`, 'error');
+        function updateStatus(type, message) {
+            try {
+                const indicator = document.getElementById('statusIndicator');
+                indicator.className = 'status-indicator ' + type;
+                indicator.textContent = message;
+            } catch (err) {
+                console.log('[SafeSend] updateStatus error:', err.message);
             }
-        });
-
-        function startMonitoring() {
-            if (monitoringInterval) clearInterval(monitoringInterval);
-            
-            monitoringInterval = setInterval(() => {
-                try {
-                    checkRecipients();
-                } catch (err) {
-                    log(`[MONITOR ERROR] ${err.message}`, 'error');
-                }
-            }, 500);
-
-            log('[MONITOR] Interval set to 500ms', 'success');
         }
 
-        function checkRecipients() {
-            const item = Office.context.mailbox.item;
+        // Wait for Office to be defined
+        function initializeApp() {
+            console.log('[SafeSend] Checking if Office is available...');
             
-            if (!item) {
-                showEmptyState();
+            if (typeof Office === 'undefined') {
+                console.log('[SafeSend] Office not ready yet, waiting...');
+                updateStatus('', '🔄 Loading Office API...');
+                setTimeout(initializeApp, 500);
                 return;
             }
 
-            item.to.getAsync((toResult) => {
-                let allRecipients = [];
+            console.log('[SafeSend] Office found! Calling Office.onReady...');
+            updateStatus('', '🔄 Initializing Outlook connection...');
+
+            Office.onReady(function(info) {
+                console.log('[SafeSend] Office.onReady called', info);
+                isOfficeReady = true;
+
+                if (info.host === Office.HostType.Outlook) {
+                    console.log('[SafeSend] Outlook detected! Starting monitoring...');
+                    isOutlook = true;
+                    updateStatus('success', '✓ Connected to Outlook - Ready to monitor');
+                    startMonitoring();
+                } else {
+                    console.log('[SafeSend] Not Outlook:', info.host);
+                    updateStatus('error', '✗ Not in Outlook context');
+                }
+            }).catch(function(error) {
+                console.log('[SafeSend] Office.onReady error:', error);
+                updateStatus('error', 'Office initialization error: ' + error.message);
+            });
+        }
+
+        function startMonitoring() {
+            console.log('[SafeSend] startMonitoring called');
+            
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+            }
+
+            monitoringInterval = setInterval(function() {
+                try {
+                    checkRecipients();
+                } catch (err) {
+                    console.log('[SafeSend] Monitor error:', err.message);
+                    updateStatus('error', 'Monitor error: ' + err.message);
+                }
+            }, 500);
+
+            console.log('[SafeSend] Monitoring started (500ms interval)');
+        }
+
+        function checkRecipients() {
+            if (!isOfficeReady || !isOutlook) {
+                return;
+            }
+
+            try {
+                const item = Office.context.mailbox.item;
                 
-                if (toResult.status === Office.AsyncResultStatus.Succeeded && toResult.value) {
-                    log(`[TO] ${toResult.value.length} recipients`, 'info');
-                    allRecipients = allRecipients.concat(toResult.value);
+                if (!item) {
+                    showEmptyState();
+                    return;
                 }
 
-                item.cc.getAsync((ccResult) => {
-                    if (ccResult.status === Office.AsyncResultStatus.Succeeded && ccResult.value) {
-                        log(`[CC] ${ccResult.value.length} recipients`, 'info');
-                        allRecipients = allRecipients.concat(ccResult.value);
+                item.to.getAsync(function(toResult) {
+                    let allRecipients = [];
+                    
+                    if (toResult.status === Office.AsyncResultStatus.Succeeded && toResult.value) {
+                        allRecipients = allRecipients.concat(toResult.value);
                     }
 
-                    item.bcc.getAsync((bccResult) => {
-                        if (bccResult.status === Office.AsyncResultStatus.Succeeded && bccResult.value) {
-                            log(`[BCC] ${bccResult.value.length} recipients`, 'info');
-                            allRecipients = allRecipients.concat(bccResult.value);
+                    item.cc.getAsync(function(ccResult) {
+                        if (ccResult.status === Office.AsyncResultStatus.Succeeded && ccResult.value) {
+                            allRecipients = allRecipients.concat(ccResult.value);
                         }
 
-                        if (allRecipients.length > 0) {
-                            displayRecipients(allRecipients);
-                        } else {
-                            showEmptyState();
-                        }
+                        item.bcc.getAsync(function(bccResult) {
+                            if (bccResult.status === Office.AsyncResultStatus.Succeeded && bccResult.value) {
+                                allRecipients = allRecipients.concat(bccResult.value);
+                            }
+
+                            if (allRecipients.length > 0) {
+                                displayRecipients(allRecipients);
+                            } else {
+                                showEmptyState();
+                            }
+                        });
                     });
                 });
-            });
+            } catch (err) {
+                console.log('[SafeSend] checkRecipients error:', err.message);
+            }
         }
 
         function displayRecipients(recipients) {
             const external = [];
             const safe = [];
 
-            recipients.forEach((recipient) => {
-                const email = recipient.emailAddress.toLowerCase().trim();
-                const domain = extractDomain(email);
+            recipients.forEach(function(recipient) {
+                try {
+                    const email = recipient.emailAddress.toLowerCase().trim();
+                    const domain = extractDomain(email);
 
-                if (TRUSTED_DOMAINS.includes(domain)) {
-                    safe.push({ email, domain });
-                    log(`[SAFE] ${email}`, 'success');
-                } else {
-                    external.push({ email, domain });
-                    log(`[EXTERNAL] ${email}`, 'error');
+                    if (TRUSTED_DOMAINS.includes(domain)) {
+                        safe.push({ email: email, domain: domain });
+                        console.log('[SafeSend SAFE]', email);
+                    } else {
+                        external.push({ email: email, domain: domain });
+                        console.log('[SafeSend EXTERNAL]', email);
+                    }
+                } catch (err) {
+                    console.log('[SafeSend] Error processing recipient:', err.message);
                 }
             });
 
-            // Update UI
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('statusPanel').style.display = 'block';
-            document.getElementById('totalCount').textContent = recipients.length;
-            document.getElementById('safeCount').textContent = safe.length;
-            document.getElementById('externalCount').textContent = external.length;
+            try {
+                document.getElementById('emptyState').style.display = 'none';
+                document.getElementById('statusPanel').style.display = 'block';
+                document.getElementById('totalCount').textContent = recipients.length;
+                document.getElementById('safeCount').textContent = safe.length;
+                document.getElementById('externalCount').textContent = external.length;
 
-            if (external.length > 0) {
-                showWarningBanner(external);
-                document.getElementById('safeBanner').classList.remove('show');
-                log('[UI] Showing WARNING banner', 'error');
-            } else if (safe.length > 0) {
-                document.getElementById('warningBanner').classList.remove('show');
-                document.getElementById('safeBanner').classList.add('show');
-                log('[UI] Showing SAFE banner', 'success');
+                if (external.length > 0) {
+                    console.log('[SafeSend] Showing WARNING banner');
+                    showWarningBanner(external);
+                    document.getElementById('safeBanner').classList.remove('show');
+                    updateStatus('success', '⚠️ ' + external.length + ' external recipient(s) detected!');
+                } else if (safe.length > 0) {
+                    console.log('[SafeSend] Showing SAFE banner');
+                    document.getElementById('warningBanner').classList.remove('show');
+                    document.getElementById('safeBanner').classList.add('show');
+                    updateStatus('success', '✓ All ' + safe.length + ' recipient(s) are safe');
+                }
+            } catch (err) {
+                console.log('[SafeSend] Display error:', err.message);
             }
         }
 
         function showWarningBanner(externalEmails) {
-            const list = document.getElementById('recipientsList');
-            list.innerHTML = externalEmails.map(r => {
-                return `<div class="recipient-item"><span class="recipient-icon">⚠️</span> ${r.email} (${r.domain})</div>`;
-            }).join('');
-
-            document.getElementById('warningBanner').classList.add('show');
+            try {
+                const list = document.getElementById('recipientsList');
+                let html = '';
+                externalEmails.forEach(function(r) {
+                    html += '<div class="recipient-item">⚠️ ' + r.email + ' (' + r.domain + ')</div>';
+                });
+                list.innerHTML = html;
+                document.getElementById('warningBanner').classList.add('show');
+            } catch (err) {
+                console.log('[SafeSend] showWarningBanner error:', err.message);
+            }
         }
 
         function showEmptyState() {
-            document.getElementById('warningBanner').classList.remove('show');
-            document.getElementById('safeBanner').classList.remove('show');
-            document.getElementById('statusPanel').style.display = 'none';
-            document.getElementById('emptyState').style.display = 'block';
+            try {
+                document.getElementById('warningBanner').classList.remove('show');
+                document.getElementById('safeBanner').classList.remove('show');
+                document.getElementById('statusPanel').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+            } catch (err) {
+                console.log('[SafeSend] showEmptyState error:', err.message);
+            }
         }
 
         function extractDomain(email) {
-            if (email && email.includes('@')) {
-                const parts = email.split('@');
-                return parts[parts.length - 1].toLowerCase().trim();
-            }
-            return email.toLowerCase().trim();
-        }
-
-        // Debug functions
-        function log(msg, type = 'info') {
-            console.log(msg);
-
-            if (debugEnabled) {
-                const debugLog = document.getElementById('debugLog');
-                const logEntry = document.createElement('div');
-                logEntry.className = `debug-log debug-${type}`;
-                logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-                debugLog.appendChild(logEntry);
-                debugLog.scrollTop = debugLog.scrollHeight;
+            try {
+                if (email && email.includes('@')) {
+                    const parts = email.split('@');
+                    return parts[parts.length - 1].toLowerCase().trim();
+                }
+                return email.toLowerCase().trim();
+            } catch (err) {
+                return '';
             }
         }
 
-        function toggleDebug() {
-            debugEnabled = !debugEnabled;
-            const debugPanel = document.getElementById('debugPanel');
-            if (debugEnabled) {
-                debugPanel.classList.add('show');
-                log('[DEBUG] Debug enabled', 'success');
-            } else {
-                debugPanel.classList.remove('show');
-            }
-        }
-
-        function clearDebugLog() {
-            document.getElementById('debugLog').innerHTML = '';
-        }
+        // Start initialization
+        console.log('[SafeSend] Page ready, starting initialization...');
+        initializeApp();
     </script>
 </body>
 </html>
