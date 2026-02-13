@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>External Warning</title>
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
+    <style>
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background-color: #FFF4CE; /* Yellow Warning Background */
+            color: #333;
+            text-align: center;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+        h1 { color: #C00000; font-size: 24px; margin-bottom: 10px; }
+        p { font-size: 16px; margin-bottom: 30px; }
+        .btn {
+            padding: 12px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+        .btn-send { background-color: #C00000; color: white; font-weight: bold; }
+        .btn-cancel { background-color: #E1DFDD; color: black; }
+        .btn-send:hover { background-color: #a00000; }
+    </style>
+</head>
+<body>
+    <h1>⚠️ EXTERNAL RECIPIENT WARNING</h1>
+    <p>You are sending this email to people <b>outside</b> of your organization.</p>
+    
+    <div>
+        <button id="cancelBtn" class="btn btn-cancel">Cancel</button>
+        <button id="sendBtn" class="btn btn-send">Send Anyway</button>
+    </div>
+
+    <script>
+        Office.onReady(function() {
+            // When user clicks "Send Anyway"
+            document.getElementById("sendBtn").onclick = function() {
+                Office.context.ui.messageParent("allow");
+            };
+            
+            // When user clicks "Cancel"
+            document.getElementById("cancelBtn").onclick = function() {
+                Office.context.ui.messageParent("cancel");
+            };
+        });
+    </script>
+</body>
+</html>
