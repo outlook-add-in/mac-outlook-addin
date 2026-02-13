@@ -8,96 +8,96 @@
 <body>
     <script>
         // PayTM Safe Send - ItemSend Event Handler
-        // This function is called BEFORE email is sent to check recipients
+        // This function is called BEFORE email is sent
+        // It warns about external recipients but allows send
         
         const TRUSTED_DOMAIN = 'paytm.com';
         
         /**
          * Main function: checkExternalRecipients
          * Called when user clicks Send in Outlook
+         * Shows warning for external recipients but allows send
          * @param {Object} event - ItemSend event object
          */
         function checkExternalRecipients(event) {
-            console.log('[PayTM SafeSend] checkExternalRecipients triggered');
+            console.log('[PayTM SafeSend] Send triggered');
             
             try {
                 const item = event.item;
+                console.log('[PayTM SafeSend] Got item');
                 
                 // Get TO recipients
                 item.to.getAsync(function(toResult) {
-                    processResult(toResult, event, 'TO');
+                    console.log('[PayTM SafeSend] to.getAsync callback');
+                    
+                    if (toResult.status !== Office.AsyncResultStatus.Succeeded) {
+                        console.log('[PayTM SafeSend] to.getAsync failed');
+                        event.completed({ allowEvent: true });
+                        return;
+                    }
+                    
+                    const recipients = toResult.value || [];
+                    console.log('[PayTM SafeSend] Recipients count: ' + recipients.length);
+                    
+                    const externalRecipients = [];
+                    const safeRecipients = [];
+                    
+                    // Check each recipient
+                    for (let i = 0; i < recipients.length; i++) {
+                        try {
+                            const email = (recipients[i].emailAddress || '').toLowerCase().trim();
+                            const domain = email.split('@')[1];
+                            
+                            console.log('[PayTM SafeSend] Checking: ' + email + ' domain: ' + domain);
+                            
+                            // Check if external or safe
+                            if (domain && domain !== TRUSTED_DOMAIN) {
+                                externalRecipients.push(email);
+                                console.log('[PayTM SafeSend] EXTERNAL: ' + email);
+                            } else {
+                                safeRecipients.push(email);
+                                console.log('[PayTM SafeSend] SAFE: ' + email);
+                            }
+                        } catch (e) {
+                            console.log('[PayTM SafeSend] Error parsing recipient: ' + e.message);
+                        }
+                    }
+                    
+                    // If external recipients found - show warning but ALLOW send
+                    if (externalRecipients.length > 0) {
+                        console.log('[PayTM SafeSend] Found ' + externalRecipients.length + ' external recipients');
+                        
+                        // Build warning message
+                        let message = '⚠️ WARNING: External Recipients Detected\n\n';
+                        message += 'You are sending to recipients outside the paytm.com domain:\n\n';
+                        
+                        for (let i = 0; i < externalRecipients.length; i++) {
+                            message += '• ' + externalRecipients[i] + '\n';
+                        }
+                        
+                        message += '\nPlease verify these are intended recipients.';
+                        
+                        // Show warning and ALLOW send
+                        alert(message);
+                        console.log('[PayTM SafeSend] Warning shown - allowing send');
+                        event.completed({ allowEvent: true });
+                        
+                    } else {
+                        // All recipients are safe - allow immediately
+                        console.log('[PayTM SafeSend] All recipients safe - allowing send');
+                        event.completed({ allowEvent: true });
+                    }
+                    
                 });
                 
             } catch (err) {
                 console.log('[PayTM SafeSend] Error: ' + err.message);
-                // Allow send on error to not break normal workflow
+                // On error, allow send to not break normal workflow
                 event.completed({ allowEvent: true });
             }
         }
         
-        /**
-         * Process recipient results
-         */
-        function processResult(result, event, fieldName) {
-            try {
-                if (result.status !== Office.AsyncResultStatus.Succeeded) {
-                    console.log('[PayTM SafeSend] ' + fieldName + ' failed');
-                    event.completed({ allowEvent: true });
-                    return;
-                }
-                
-                const recipients = result.value || [];
-                const externalRecipients = [];
-                
-                // Check each recipient
-                for (let i = 0; i < recipients.length; i++) {
-                    try {
-                        const email = (recipients[i].emailAddress || '').toLowerCase().trim();
-                        const domain = email.split('@')[1];
-                        
-                        // Not trusted domain?
-                        if (domain && domain !== TRUSTED_DOMAIN) {
-                            externalRecipients.push(email);
-                            console.log('[PayTM SafeSend] EXTERNAL: ' + email);
-                        } else {
-                            console.log('[PayTM SafeSend] SAFE: ' + email);
-                        }
-                    } catch (e) {
-                        console.log('[PayTM SafeSend] Error parsing recipient: ' + e.message);
-                    }
-                }
-                
-                // External recipients found - show warning
-                if (externalRecipients.length > 0) {
-                    console.log('[PayTM SafeSend] Found ' + externalRecipients.length + ' external recipients');
-                    
-                    // Create warning message
-                    let message = '⚠️ WARNING: External Recipients Detected\n\n';
-                    message += 'You are sending to recipients outside PayTM domain:\n\n';
-                    for (let i = 0; i < externalRecipients.length; i++) {
-                        message += '• ' + externalRecipients[i] + '\n';
-                    }
-                    message += '\nDo you want to continue sending?';
-                    
-                    // Show dialog - user confirms or cancels
-                    if (confirm(message)) {
-                        console.log('[PayTM SafeSend] User confirmed - allowing send');
-                        event.completed({ allowEvent: true });
-                    } else {
-                        console.log('[PayTM SafeSend] User cancelled - blocking send');
-                        event.completed({ allowEvent: false });
-                    }
-                } else {
-                    // All recipients are safe
-                    console.log('[PayTM SafeSend] All recipients safe - allowing send');
-                    event.completed({ allowEvent: true });
-                }
-                
-            } catch (err) {
-                console.log('[PayTM SafeSend] Process error: ' + err.message);
-                event.completed({ allowEvent: true });
-            }
-        }
+        console.log('[PayTM SafeSend] onSend.html loaded - checkExternalRecipients function ready');
     </script>
 </body>
 </html>
