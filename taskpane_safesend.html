@@ -1,533 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8" />
-    <title>PayTM Safe Send - Compose Panel</title>
-    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <title>PayTM Safe Send</title>
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
-            padding: 0;
-        }
-
-        .container {
-            padding: 0;
-        }
-
-        /* Warning Banner - Like VSTO Form Region */
-        .warning-banner {
-            display: none;
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-            color: white;
-            padding: 16px;
-            border-radius: 8px;
-            margin: 12px;
-            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
-            animation: slideDown 0.3s ease-out;
-        }
-
-        .warning-banner.show {
-            display: block;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .warning-header {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .warning-icon {
-            font-size: 18px;
-        }
-
-        .recipients-list {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 4px;
-            padding: 12px;
-            margin-bottom: 12px;
-            font-size: 12px;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-
-        .recipient-item {
-            padding: 6px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .recipient-item:last-child {
-            border-bottom: none;
-        }
-
-        .recipient-icon {
-            font-size: 14px;
-        }
-
-        .recipient-email {
-            flex: 1;
-            word-break: break-all;
-        }
-
-        .recipient-domain {
-            font-size: 11px;
-            opacity: 0.9;
-        }
-
-        .warning-message {
-            font-size: 13px;
-            line-height: 1.5;
-            margin-bottom: 12px;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-proceed {
-            background: rgba(255, 255, 255, 0.25);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .btn-proceed:hover {
-            background: rgba(255, 255, 255, 0.35);
-        }
-
-        .btn-edit {
-            background: white;
-            color: #ff6b6b;
-        }
-
-        .btn-edit:hover {
-            background: #f5f5f5;
-        }
-
-        /* Safe Banner */
-        .safe-banner {
-            display: none;
-            background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin: 12px;
-            font-size: 12px;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        .safe-banner.show {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Status Panel */
-        .status-panel {
-            background: white;
-            border-radius: 8px;
-            padding: 12px;
-            margin: 12px;
-            border: 1px solid #e0e0e0;
-            font-size: 12px;
-        }
-
-        .status-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .status-row:last-child {
-            border-bottom: none;
-        }
-
-        .status-label {
-            color: #666;
-            font-weight: 500;
-        }
-
-        .status-value {
-            font-weight: 600;
-            color: #333;
-        }
-
-        .status-value.warning {
-            color: #ff6b6b;
-        }
-
-        .status-value.safe {
-            color: #51cf66;
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
-        }
-
-        .empty-icon {
-            font-size: 32px;
-            margin-bottom: 12px;
-        }
-
-        .empty-text {
-            font-size: 12px;
-            line-height: 1.5;
-        }
-
-        /* Configuration Section */
-        .config-section {
-            background: white;
-            border-radius: 8px;
-            padding: 12px;
-            margin: 12px;
-            border: 1px solid #e0e0e0;
-        }
-
-        .config-title {
-            font-weight: 600;
-            font-size: 12px;
-            margin-bottom: 10px;
-            color: #333;
-        }
-
-        .config-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .config-item:last-child {
-            border-bottom: none;
-        }
-
-        .config-item input[type="checkbox"] {
-            margin-right: 8px;
-        }
-
-        .config-label {
-            font-size: 12px;
-            flex: 1;
-        }
+        body { font-family: "Segoe UI", "Helvetica Neue", sans-serif; padding: 10px; background-color: #f3f2f1; }
+        h3 { border-bottom: 1px solid #c8c6c4; padding-bottom: 5px; margin-top: 0; }
+        .card { background: white; padding: 10px; border: 1px solid #d1d1d1; margin-bottom: 5px; }
+        .safe { color: green; font-weight: bold; }
+        .unsafe { color: #a80000; font-weight: bold; }
+        #status { font-style: italic; color: #666; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Warning Banner (shown when external recipients detected) -->
-        <div id="warningBanner" class="warning-banner">
-            <div class="warning-header">
-                <span class="warning-icon">⚠️</span>
-                <span>External Recipients Detected</span>
-            </div>
-            
-            <div class="recipients-list" id="recipientsList">
-                <!-- Populated dynamically -->
-            </div>
-            
-            <div class="warning-message">
-                You are sending to recipients outside the <strong>paytm.com</strong> domain. 
-                Be careful to verify these are intended recipients.
-            </div>
-            
-            <div class="action-buttons">
-                <button class="btn btn-edit" onclick="editEmail()">Edit Email</button>
-                <button class="btn btn-proceed" onclick="proceedSend()">Send Anyway</button>
-            </div>
-        </div>
-
-        <!-- Safe Banner (shown when all recipients are safe) -->
-        <div id="safeBanner" class="safe-banner">
-            <span>✓ All recipients verified - safe domain only</span>
-        </div>
-
-        <!-- Empty State (shown before recipients added) -->
-        <div id="emptyState" class="empty-state">
-            <div class="empty-icon">✉️</div>
-            <div class="empty-text">
-                Add recipients to your email.<br/>
-                SafeSend will verify they are from trusted domains.
-            </div>
-        </div>
-
-        <!-- Status Panel -->
-        <div id="statusPanel" class="status-panel" style="display: none;">
-            <div class="status-row">
-                <span class="status-label">Total Recipients:</span>
-                <span class="status-value" id="totalRecipients">0</span>
-            </div>
-            <div class="status-row">
-                <span class="status-label">Safe (PayTM):</span>
-                <span class="status-value safe" id="safeRecipients">0</span>
-            </div>
-            <div class="status-row">
-                <span class="status-label">External:</span>
-                <span class="status-value warning" id="warningRecipients">0</span>
-            </div>
-        </div>
-
-        <!-- Configuration Section -->
-        <div class="config-section">
-            <div class="config-title">⚙️ Configuration</div>
-            
-            <div class="config-item">
-                <input type="checkbox" id="blockMode" checked>
-                <span class="config-label">Warn before sending to external recipients</span>
-            </div>
-            
-            <div class="config-item">
-                <input type="checkbox" id="addSubjectTag" checked>
-                <span class="config-label">Add [External] tag to subject</span>
-            </div>
-            
-            <div class="config-item">
-                <input type="checkbox" id="addBanner" checked>
-                <span class="config-label">Show warning banner</span>
-            </div>
-        </div>
+    <h3>Recipient Checker</h3>
+    <div id="content">
+        <p id="status">Loading Outlook context...</p>
+        <ul id="list" style="list-style-type: none; padding: 0;"></ul>
     </div>
 
     <script>
-        // Configuration
-        const CONFIG = {
-            trustedDomains: ['paytm.com'],
-            allowlist: [],
-            blockMode: true,
-            addSubjectTag: true,
-            addBanner: true,
-            refreshInterval: 500 // ms
-        };
-
-        let lastRecipients = [];
-        let monitoringInterval = null;
-
-        // Initialize
-        Office.onReady((info) => {
+        // Use older "var" and "function" syntax to prevent crashes in IE11/Old Outlook
+        Office.onReady(function(info) {
+            document.getElementById("status").innerText = "Ready. Checking...";
             if (info.host === Office.HostType.Outlook) {
-                console.log('PayTM Safe Send - Taskpane initialized');
-                startMonitoring();
-                loadConfiguration();
+                checkRecipients();
+            } else {
+                document.getElementById("status").innerText = "Error: Not running in Outlook.";
             }
         });
 
-        /**
-         * Start monitoring recipients
-         */
-        function startMonitoring() {
-            monitoringInterval = setInterval(checkRecipients, CONFIG.refreshInterval);
-        }
-
-        /**
-         * Check recipients in current email
-         */
         function checkRecipients() {
-            const item = Office.context.mailbox.item;
-            
-            if (!item) {
-                showEmptyState();
-                return;
-            }
+            // Get recipients from the "To" field
+            Office.context.mailbox.item.to.getAsync(function(result) {
+                if (result.status === Office.AsyncResultStatus.Succeeded) {
+                    var recipients = result.value;
+                    var list = document.getElementById("list");
+                    var status = document.getElementById("status");
+                    var allSafe = true;
 
-            item.to.getAsync((toResult) => {
-                let allRecipients = [];
-                
-                if (toResult.status === Office.AsyncResultStatus.Succeeded) {
-                    allRecipients = allRecipients.concat(toResult.value || []);
-                }
+                    // Clear previous list
+                    list.innerHTML = "";
 
-                item.cc.getAsync((ccResult) => {
-                    if (ccResult.status === Office.AsyncResultStatus.Succeeded) {
-                        allRecipients = allRecipients.concat(ccResult.value || []);
+                    if (recipients.length === 0) {
+                        status.innerText = "No recipients found.";
+                        return;
                     }
 
-                    item.bcc.getAsync((bccResult) => {
-                        if (bccResult.status === Office.AsyncResultStatus.Succeeded) {
-                            allRecipients = allRecipients.concat(bccResult.value || []);
+                    for (var i = 0; i < recipients.length; i++) {
+                        var r = recipients[i];
+                        var li = document.createElement("li");
+                        li.className = "card";
+                        
+                        // Check if email contains paytm.com
+                        if (r.emailAddress.toLowerCase().indexOf("@paytm.com") > -1) {
+                            li.innerHTML = "<span class='safe'>\u2705 Internal:</span> " + r.emailAddress;
+                        } else {
+                            li.innerHTML = "<span class='unsafe'>\u26A0\uFE0F External:</span> " + r.emailAddress;
+                            allSafe = false;
                         }
+                        list.appendChild(li);
+                    }
 
-                        displayRecipients(allRecipients);
-                    });
-                });
-            });
-        }
-
-        /**
-         * Display recipients and warnings
-         */
-        function displayRecipients(recipients) {
-            if (recipients.length === 0) {
-                showEmptyState();
-                return;
-            }
-
-            // Analyze recipients
-            const externalRecipients = [];
-            const safeRecipients = [];
-
-            recipients.forEach((recipient) => {
-                const email = recipient.emailAddress.toLowerCase();
-                const domain = extractDomain(email);
-                
-                if (CONFIG.trustedDomains.includes(domain) || CONFIG.allowlist.includes(domain)) {
-                    safeRecipients.push({ email, domain, name: recipient.displayName });
+                    status.innerText = allSafe ? "Safe: All recipients are internal." : "WARNING: External recipients detected.";
+                    status.style.color = allSafe ? "green" : "red";
                 } else {
-                    externalRecipients.push({ email, domain, name: recipient.displayName });
+                    document.getElementById("status").innerText = "Failed to read recipients. Try again.";
                 }
             });
-
-            // Update status
-            updateStatus(recipients.length, safeRecipients.length, externalRecipients.length);
-
-            // Show appropriate banner
-            if (externalRecipients.length > 0) {
-                showWarningBanner(externalRecipients);
-                document.getElementById('safeBanner').classList.remove('show');
-                document.getElementById('emptyState').style.display = 'none';
-            } else if (safeRecipients.length > 0) {
-                showSafeBanner();
-                document.getElementById('warningBanner').classList.remove('show');
-                document.getElementById('emptyState').style.display = 'none';
-            }
         }
-
-        /**
-         * Show warning banner with external recipients
-         */
-        function showWarningBanner(externalRecipients) {
-            const banner = document.getElementById('warningBanner');
-            const list = document.getElementById('recipientsList');
-
-            list.innerHTML = externalRecipients.map(r => `
-                <div class="recipient-item">
-                    <span class="recipient-icon">⚠️</span>
-                    <span class="recipient-email">${r.email}</span>
-                    <span class="recipient-domain">(${r.domain})</span>
-                </div>
-            `).join('');
-
-            banner.classList.add('show');
-        }
-
-        /**
-         * Show safe banner
-         */
-        function showSafeBanner() {
-            document.getElementById('safeBanner').classList.add('show');
-        }
-
-        /**
-         * Show empty state
-         */
-        function showEmptyState() {
-            document.getElementById('warningBanner').classList.remove('show');
-            document.getElementById('safeBanner').classList.remove('show');
-            document.getElementById('emptyState').style.display = 'block';
-            document.getElementById('statusPanel').style.display = 'none';
-        }
-
-        /**
-         * Update status panel
-         */
-        function updateStatus(total, safe, warning) {
-            if (total > 0) {
-                document.getElementById('statusPanel').style.display = 'block';
-                document.getElementById('totalRecipients').textContent = total;
-                document.getElementById('safeRecipients').textContent = safe;
-                document.getElementById('warningRecipients').textContent = warning;
-            } else {
-                document.getElementById('statusPanel').style.display = 'none';
-            }
-        }
-
-        /**
-         * Extract domain from email
-         */
-        function extractDomain(email) {
-            if (email && email.includes('@')) {
-                return email.split('@')[1].toLowerCase();
-            }
-            return email.toLowerCase();
-        }
-
-        /**
-         * Edit email - minimize panel and focus on compose
-         */
-        function editEmail() {
-            console.log('Edit email clicked');
-            // Close or minimize taskpane
-        }
-
-        /**
-         * Proceed with send
-         */
-        function proceedSend() {
-            console.log('Proceed with send');
-            // The actual send will be handled by ItemSend event in functions.html
-        }
-
-        /**
-         * Load configuration
-         */
-        function loadConfiguration() {
-            document.getElementById('blockMode').checked = CONFIG.blockMode;
-            document.getElementById('addSubjectTag').checked = CONFIG.addSubjectTag;
-            document.getElementById('addBanner').checked = CONFIG.addBanner;
-
-            // Save configuration changes
-            document.getElementById('blockMode').addEventListener('change', (e) => {
-                CONFIG.blockMode = e.target.checked;
-            });
-            document.getElementById('addSubjectTag').addEventListener('change', (e) => {
-                CONFIG.addSubjectTag = e.target.checked;
-            });
-            document.getElementById('addBanner').addEventListener('change', (e) => {
-                CONFIG.addBanner = e.target.checked;
-            });
-        }
-
-        // Cleanup on unload
-        window.addEventListener('unload', () => {
-            if (monitoringInterval) {
-                clearInterval(monitoringInterval);
-            }
-        });
     </script>
 </body>
 </html>
