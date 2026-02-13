@@ -2,95 +2,69 @@
 <html>
 <head>
     <meta charset="UTF-8" />
-    <title>PayTM Safe Send</title>
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
 </head>
-<body style="display:none;">
-    <script>
-        // Global function for ItemSend event
-        window.checkExternalRecipients = function(event) {
-            console.log('[PayTM] checkExternalRecipients START');
-            
-            try {
-                const item = event.item;
-                console.log('[PayTM] Got item, checking recipients');
-                
-                // Get all TO recipients
-                item.to.getAsync(function(toResult) {
-                    console.log('[PayTM] to.getAsync called');
-                    
-                    if (toResult.status !== Office.AsyncResultStatus.Succeeded) {
-                        console.log('[PayTM] getAsync failed - allowing send');
-                        event.completed({ allowEvent: true });
-                        return;
-                    }
-                    
-                    const recipients = toResult.value || [];
-                    console.log('[PayTM] Recipients found: ' + recipients.length);
-                    
-                    // Check for external recipients
-                    let hasExternal = false;
-                    let externalList = [];
-                    let internalList = [];
-                    
-                    for (let i = 0; i < recipients.length; i++) {
-                        try {
-                            const email = (recipients[i].emailAddress || '').toLowerCase().trim();
-                            const parts = email.split('@');
-                            const domain = parts[1];
-                            
-                            console.log('[PayTM] Recipient ' + i + ': ' + email + ' domain: ' + domain);
-                            
-                            // Check if paytm.com or external
-                            if (domain === 'paytm.com') {
-                                internalList.push(email);
-                                console.log('[PayTM] INTERNAL: ' + email);
-                            } else if (domain) {
-                                externalList.push(email);
-                                hasExternal = true;
-                                console.log('[PayTM] EXTERNAL: ' + email);
-                            }
-                        } catch (e) {
-                            console.log('[PayTM] Error parsing: ' + e.message);
-                        }
-                    }
-                    
-                    console.log('[PayTM] hasExternal: ' + hasExternal);
-                    
-                    // ONLY show popup if has external recipients
-                    if (hasExternal && externalList.length > 0) {
-                        console.log('[PayTM] Showing warning for external recipients');
-                        
-                        let warningMsg = '⚠️ WARNING: EXTERNAL RECIPIENTS\n\n';
-                        warningMsg += 'You are sending to recipients OUTSIDE paytm.com:\n\n';
-                        
-                        for (let j = 0; j < externalList.length; j++) {
-                            warningMsg += '• ' + externalList[j] + '\n';
-                        }
-                        
-                        warningMsg += '\nPlease verify these are intended recipients.\n\nClick OK to continue sending.';
-                        
-                        // Show popup
-                        alert(warningMsg);
-                        
-                        // Always allow send
-                        event.completed({ allowEvent: true });
-                        console.log('[PayTM] Warning shown - allowing send');
-                    } else {
-                        // No external recipients - silent allow
-                        console.log('[PayTM] All recipients are internal - no warning needed');
-                        event.completed({ allowEvent: true });
-                    }
-                });
-                
-            } catch (err) {
-                console.log('[PayTM] Caught error: ' + err.message);
-                // On error, allow send
-                event.completed({ allowEvent: true });
-            }
-        };
-        
-        console.log('[PayTM] onSend.html loaded - function ready');
-    </script>
+<body>
 </body>
 </html>
+
+<script>
+// Function MUST be declared at global scope - NOT inside any other function
+function checkExternalRecipients(event) {
+    alert('✓ FUNCTION CALLED - STEP 1');
+    
+    try {
+        var mailItem = event.item;
+        alert('✓ Got mailItem - STEP 2');
+        
+        mailItem.to.getAsync(function(asyncResult) {
+            alert('✓ Got recipients - STEP 3');
+            
+            if (asyncResult.status === Office.AsyncResultStatus.Succeeded) {
+                var recipients = asyncResult.value;
+                alert('✓ Recipients count: ' + recipients.length + ' - STEP 4');
+                
+                var hasExternal = false;
+                var externalList = [];
+                
+                for (var i = 0; i < recipients.length; i++) {
+                    var emailAddress = recipients[i].emailAddress.toLowerCase();
+                    var domain = emailAddress.split('@')[1];
+                    
+                    alert('Checking: ' + emailAddress + ' | Domain: ' + domain);
+                    
+                    if (domain !== 'paytm.com' && domain !== undefined && domain !== '') {
+                        hasExternal = true;
+                        externalList.push(emailAddress);
+                        alert('⚠️ EXTERNAL FOUND: ' + emailAddress);
+                    }
+                }
+                
+                alert('✓ hasExternal: ' + hasExternal + ' - STEP 5');
+                
+                if (hasExternal) {
+                    var msg = '⚠️ WARNING: EXTERNAL RECIPIENTS\n\n';
+                    msg += 'Sending to:\n';
+                    for (var j = 0; j < externalList.length; j++) {
+                        msg += externalList[j] + '\n';
+                    }
+                    msg += '\nVerify and continue?';
+                    alert(msg);
+                } else {
+                    alert('✓ All recipients are paytm.com');
+                }
+            }
+            
+            event.completed({ allowEvent: true });
+        });
+        
+    } catch (err) {
+        alert('ERROR: ' + err.message);
+        event.completed({ allowEvent: true });
+    }
+}
+
+// Make sure function is global
+window.checkExternalRecipients = checkExternalRecipients;
+alert('onSend.html loaded - function registered');
+</script>
