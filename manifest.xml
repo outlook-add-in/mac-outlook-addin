@@ -5,9 +5,10 @@
     xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0" xsi:type="MailApp">
 
     <Id>c5d0e893-0a4b-5b9c-c2e7-9f6a3d2b4c5e</Id>
-    <Version>1.0.0.2</Version>
+    <Version>1.0.0.3</Version>
     <ProviderName>PayTM</ProviderName>
     <DefaultLocale>en-US</DefaultLocale>
+    
     <DisplayName DefaultValue="Paytm Email Checker"/>
     <Description DefaultValue="Get warned when sending emails to external recipients"/>
     
@@ -74,13 +75,13 @@
                     <bt:Url id="Taskpane.Url" DefaultValue="https://outlook-add-in.github.io/mac-outlook-addin/taskpane.html"/>
                 </bt:Urls>
                 <bt:ShortStrings>
-                    <bt:String id="GroupLabel" DefaultValue="PayTM Safe Send"/>
+                    <bt:String id="GroupLabel" DefaultValue="Paytm Email Checker"/>
                     <bt:String id="TaskpaneButton.Label" DefaultValue="Safe Send Settings"/>
                     <bt:String id="ActionButton.Label" DefaultValue="Save Settings"/>
                 </bt:ShortStrings>
                 <bt:LongStrings>
-                    <bt:String id="TaskpaneButton.Tooltip" DefaultValue="View PayTM Safe Send settings"/>
-                    <bt:String id="ActionButton.Tooltip" DefaultValue="Save PayTM Safe Send configuration"/>
+                    <bt:String id="TaskpaneButton.Tooltip" DefaultValue="View Paytm Email Checker settings"/>
+                    <bt:String id="ActionButton.Tooltip" DefaultValue="Save Paytm Email Checker configuration"/>
                 </bt:LongStrings>
             </Resources>
         </VersionOverrides>
