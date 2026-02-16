@@ -3,7 +3,6 @@ Office.onReady();
 function checkExternalRecipients(event) {
     var item = Office.context.mailbox.item;
 
-    // 1. Guaranteed list of Trusted Domains
     var trustedDomains = [
         "paytmpayments.com", "paytmmoney.com", "paytminsurance.co.in", "paytmservices.com", "paytm.com", 
         "powerplay.today", "inapaq.com", "paytmmall.io", "cloud.paytm.com", "firstgames.id", "ticketnew.com", 
@@ -25,16 +24,14 @@ function checkExternalRecipients(event) {
         var recipients = result.value;
         var externalEmails = []; 
 
-        // 2. Scan Logic
+        // 1. Scan Logic
         for (var i = 0; i < recipients.length; i++) {
             var email = recipients[i].emailAddress.toLowerCase();
             var isSafe = false;
             
             for (var j = 0; j < trustedDomains.length; j++) {
-                // Checks if it ends with exactly "@domain.com" or a subdomain ".domain.com"
                 if (email.endsWith("@" + trustedDomains[j]) || email.endsWith("." + trustedDomains[j])) {
-                    isSafe = true; 
-                    break;
+                    isSafe = true; break;
                 }
             }
             if (!isSafe) { 
@@ -42,37 +39,18 @@ function checkExternalRecipients(event) {
             }
         }
 
-        // 3. Decision Logic (Native Outlook Banner)
+        // 2. Pass result to Native Prompt
         if (externalEmails.length === 0) {
             // Internal Only -> Send Silently
             event.completed({ allowEvent: true });
         } else {
-            // External Found -> Use Native Outlook Banner instead of a Pop-up window
-            item.loadCustomPropertiesAsync(function (propResult) {
-                var props = propResult.value;
-                var warningStatus = props.get("WarningBypass"); 
-
-                if (warningStatus === "yes") {
-                    // USER CLICKED SEND A SECOND TIME -> Let the email go through
-                    props.remove("WarningBypass");
-                    props.saveAsync(function() {
-                         event.completed({ allowEvent: true });
-                    });
-                } else {
-                    // FIRST CLICK -> Stop the send and show the native text banner at the top
-                    props.set("WarningBypass", "yes");
-                    props.saveAsync(function() {
-                        
-                        // Set the text for the native banner
-                        var recWord = externalEmails.length === 1 ? "recipient" : "recipients";
-                        var bannerText = "Confidentiality Warning: You are sending to " + externalEmails.length + " external " + recWord + ". Click Send again to confirm.";
-                        
-                        event.completed({ 
-                            allowEvent: false, 
-                            errorMessage: bannerText
-                        });
-                    });
-                }
+            var recWord = externalEmails.length === 1 ? "recipient" : "recipients";
+            var warningText = "Confidentiality Warning: You are sending to " + externalEmails.length + " external " + recWord + ".\n\n" + externalEmails.join(", ");
+            
+            // This triggers the native Outlook prompt with "Send Anyway" and "Don't Send" buttons
+            event.completed({ 
+                allowEvent: false, 
+                errorMessage: warningText
             });
         }
     });
