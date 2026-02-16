@@ -1,13 +1,13 @@
-/*
- * BIGGER WARNING LOGIC (Popup Dialog)
- */
-
 Office.onReady();
 
-var dialog; // Global dialog variable
+var dialog;
 
 function checkExternalRecipients(event) {
     var item = Office.context.mailbox.item;
+
+    // 1. Load Dynamic Trusted Domains
+    var savedDomains = Office.context.roamingSettings.get("TrustedDomains");
+    var trustedDomains = savedDomains ? JSON.parse(savedDomains) : ["paytm.com"];
 
     item.to.getAsync(function(result) {
         if (result.status !== Office.AsyncResultStatus.Succeeded) {
@@ -16,10 +16,9 @@ function checkExternalRecipients(event) {
         }
 
         var recipients = result.value;
-        var trustedDomains = ["paytm.com", "paytm.in"]; 
         var externalFound = false;
 
-        // 1. Check Logic
+        // 2. Check logic
         for (var i = 0; i < recipients.length; i++) {
             var email = recipients[i].emailAddress.toLowerCase();
             var isSafe = false;
@@ -31,34 +30,30 @@ function checkExternalRecipients(event) {
             if (!isSafe) { externalFound = true; break; }
         }
 
-        // 2. Decision
         if (!externalFound) {
-            // Internal -> Send Silently
+            // Internal Only -> Send Silently
             event.completed({ allowEvent: true });
         } else {
-            // External -> Open BIG POPUP Dialog
+            // External Found -> Open Popup
             var url = "https://vikash3pandey-sys.github.io/outlook-alerts/warning.html";
 
-            // Open dialog (Width/Height are % of screen)
-            Office.context.ui.displayDialogAsync(url, { height: 40, width: 30, displayInIframe: true },
+            Office.context.ui.displayDialogAsync(url, { height: 45, width: 40, displayInIframe: true },
                 function (asyncResult) {
                     if (asyncResult.status === Office.AsyncResultStatus.Failed) {
-                        // If popup fails to open (blocker), block email safely
-                        event.completed({ allowEvent: false, errorMessage: "⚠️ Security Check Failed: Could not open warning popup." });
+                        event.completed({ allowEvent: false, errorMessage: "Security Check Failed." });
                     } else {
-                        // Dialog Opened Successfully
                         dialog = asyncResult.value;
                         
-                        // Listen for button click from the popup
                         dialog.addEventHandler(Office.EventType.DialogMessageReceived, function(arg) {
-                            dialog.close(); // Close popup
+                            dialog.close(); 
                             
                             if (arg.message === "allow") {
-                                // User clicked "Send Anyway"
                                 event.completed({ allowEvent: true });
-                            } else {
-                                // User clicked "Cancel"
+                            } else if (arg.message === "cancel") {
                                 event.completed({ allowEvent: false });
+                            } else if (arg.message === "remove_and_send") {
+                                // USER CHOSE TO CLEAN THE EMAIL
+                                removeExternalsAndSend(item, trustedDomains, event);
                             }
                         });
                     }
@@ -66,4 +61,45 @@ function checkExternalRecipients(event) {
             );
         }
     });
+}
+
+// Helper 1: Removes externals from "To" and "CC" and sends the email
+function removeExternalsAndSend(item, trustedDomains, event) {
+    // Clean the TO field
+    item.to.getAsync(function(resTo) {
+        var safeTo = filterSafe(resTo.value, trustedDomains);
+        item.to.setAsync(safeTo, function() { 
+            
+            // Clean the CC field
+            item.cc.getAsync(function(resCc) {
+                var safeCc = filterSafe(resCc.value, trustedDomains);
+                item.cc.setAsync(safeCc, function() {
+                    
+                    // Fields cleaned -> Allow Send
+                    event.completed({ allowEvent: true });
+                });
+            });
+        });
+    });
+}
+
+// Helper 2: Keeps only trusted emails
+function filterSafe(recipients, trustedDomains) {
+    if (!recipients) return [];
+    var safeList = [];
+    
+    for (var i = 0; i < recipients.length; i++) {
+        var email = recipients[i].emailAddress.toLowerCase();
+        var isSafe = false;
+        for (var j = 0; j < trustedDomains.length; j++) {
+            if (email.indexOf("@" + trustedDomains[j]) > -1) {
+                isSafe = true;
+                break;
+            }
+        }
+        if (isSafe) {
+            safeList.push(recipients[i]);
+        }
+    }
+    return safeList;
 }
