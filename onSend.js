@@ -5,6 +5,7 @@ var dialog;
 function checkExternalRecipients(event) {
     var item = Office.context.mailbox.item;
 
+    // Your complete list of trusted domains
     var trustedDomains = [
         "paytmpayments.com", "paytmmoney.com", "paytminsurance.co.in", "paytmservices.com", "paytm.com", 
         "powerplay.today", "inapaq.com", "paytmmall.io", "cloud.paytm.com", "firstgames.id", "ticketnew.com", 
@@ -26,14 +27,14 @@ function checkExternalRecipients(event) {
         var recipients = result.value;
         var externalEmails = []; 
 
-        // 1. Scan Logic
         for (var i = 0; i < recipients.length; i++) {
             var email = recipients[i].emailAddress.toLowerCase();
             var isSafe = false;
             
             for (var j = 0; j < trustedDomains.length; j++) {
                 if (email.endsWith("@" + trustedDomains[j]) || email.endsWith("." + trustedDomains[j])) {
-                    isSafe = true; break;
+                    isSafe = true; 
+                    break;
                 }
             }
             if (!isSafe) { 
@@ -41,29 +42,27 @@ function checkExternalRecipients(event) {
             }
         }
 
-        // 2. Open Dialog if External is Found
         if (externalEmails.length === 0) {
-            event.completed({ allowEvent: true }); // Safe, send it
+            event.completed({ allowEvent: true });
         } else {
+            // UPDATED URL HERE
             var encodedEmails = encodeURIComponent(externalEmails.join(","));
-            var url = "https://vikash3pandey-sys.github.io/outlook-alerts/warning.html?ext=" + encodedEmails;
+            var url = "https://outlook-add-in.github.io/mac-outlook-addin/warning.html?ext=" + encodedEmails;
 
-            // Open the Custom Warning Window
-            Office.context.ui.displayDialogAsync(url, { height: 45, width: 30, displayInIframe: true },
+            Office.context.ui.displayDialogAsync(url, { height: 40, width: 35, displayInIframe: true },
                 function (asyncResult) {
                     if (asyncResult.status === Office.AsyncResultStatus.Failed) {
                         event.completed({ allowEvent: false, errorMessage: "Security Check Failed." });
                     } else {
                         dialog = asyncResult.value;
                         
-                        // Wait for the user to click a button in the pop-up
                         dialog.addEventHandler(Office.EventType.DialogMessageReceived, function(arg) {
                             dialog.close(); 
                             
                             if (arg.message === "allow") {
-                                event.completed({ allowEvent: true }); // User clicked Send Anyway
+                                event.completed({ allowEvent: true }); 
                             } else {
-                                event.completed({ allowEvent: false }); // User clicked Cancel
+                                event.completed({ allowEvent: false }); 
                             }
                         });
                     }
