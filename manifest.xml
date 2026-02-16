@@ -8,7 +8,7 @@
     <Version>1.0.0.2</Version>
     <ProviderName>PayTM</ProviderName>
     <DefaultLocale>en-US</DefaultLocale>
-    <DisplayName DefaultValue="PayTM Safe Send"/>
+    <DisplayName DefaultValue="Paytm Email Checker"/>
     <Description DefaultValue="Get warned when sending emails to external recipients"/>
     
     <IconUrl DefaultValue="https://outlook-add-in.github.io/mac-outlook-addin/icon32.png"/>
