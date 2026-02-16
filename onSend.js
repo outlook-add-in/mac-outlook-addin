@@ -16,7 +16,7 @@ function checkExternalRecipients(event) {
         }
 
         var recipients = result.value;
-        var externalFound = false;
+        var externalEmails = []; // Array to store the exact external addresses
 
         // 2. Check logic
         for (var i = 0; i < recipients.length; i++) {
@@ -27,17 +27,20 @@ function checkExternalRecipients(event) {
                     isSafe = true; break;
                 }
             }
-            if (!isSafe) { externalFound = true; break; }
+            if (!isSafe) { 
+                externalEmails.push(email); // Save the bad email
+            }
         }
 
-        if (!externalFound) {
+        if (externalEmails.length === 0) {
             // Internal Only -> Send Silently
             event.completed({ allowEvent: true });
         } else {
-            // External Found -> Open Popup
-            var url = "https://vikash3pandey-sys.github.io/outlook-alerts/warning.html";
+            // External Found -> Prepare URL with the list of external emails
+            var encodedEmails = encodeURIComponent(externalEmails.join(","));
+            var url = "https://vikash3pandey-sys.github.io/outlook-alerts/warning.html?ext=" + encodedEmails;
 
-            Office.context.ui.displayDialogAsync(url, { height: 45, width: 40, displayInIframe: true },
+            Office.context.ui.displayDialogAsync(url, { height: 50, width: 40, displayInIframe: true },
                 function (asyncResult) {
                     if (asyncResult.status === Office.AsyncResultStatus.Failed) {
                         event.completed({ allowEvent: false, errorMessage: "Security Check Failed." });
@@ -48,11 +51,13 @@ function checkExternalRecipients(event) {
                             dialog.close(); 
                             
                             if (arg.message === "allow") {
+                                // SEND TO EVERYONE
                                 event.completed({ allowEvent: true });
                             } else if (arg.message === "cancel") {
+                                // CANCEL SEND
                                 event.completed({ allowEvent: false });
                             } else if (arg.message === "remove_and_send") {
-                                // USER CHOSE TO CLEAN THE EMAIL
+                                // SCRUB EXTERNALS AND SEND
                                 removeExternalsAndSend(item, trustedDomains, event);
                             }
                         });
@@ -65,17 +70,12 @@ function checkExternalRecipients(event) {
 
 // Helper 1: Removes externals from "To" and "CC" and sends the email
 function removeExternalsAndSend(item, trustedDomains, event) {
-    // Clean the TO field
     item.to.getAsync(function(resTo) {
         var safeTo = filterSafe(resTo.value, trustedDomains);
         item.to.setAsync(safeTo, function() { 
-            
-            // Clean the CC field
             item.cc.getAsync(function(resCc) {
                 var safeCc = filterSafe(resCc.value, trustedDomains);
                 item.cc.setAsync(safeCc, function() {
-                    
-                    // Fields cleaned -> Allow Send
                     event.completed({ allowEvent: true });
                 });
             });
@@ -93,13 +93,10 @@ function filterSafe(recipients, trustedDomains) {
         var isSafe = false;
         for (var j = 0; j < trustedDomains.length; j++) {
             if (email.indexOf("@" + trustedDomains[j]) > -1) {
-                isSafe = true;
-                break;
+                isSafe = true; break;
             }
         }
-        if (isSafe) {
-            safeList.push(recipients[i]);
-        }
+        if (isSafe) { safeList.push(recipients[i]); }
     }
     return safeList;
 }
