@@ -42,7 +42,8 @@
         function loadDomains() {
             // Read saved settings from Outlook
             var saved = Office.context.roamingSettings.get("TrustedDomains");
-            var domains = saved ? JSON.parse(saved) : ["paytm.com"];
+            var defaultDomains = ["paytmpayments.com", "paytmmoney.com", "paytminsurance.co.in", "paytmservices.com", "paytm.com", "powerplay.today", "inapaq.com", "paytmmall.io", "cloud.paytm.com", "firstgames.id", "ticketnew.com", "paytmmall.com", "paytmplay.com", "mobiquest.com", "fellowinfotech.com", "paytminsuretech.com", "alpineinfocom.com", "firstgames.in", "first.games", "paytmfoundation.org", "paytmforbusiness.in", "ps.paytm.com", "paytmcloud.in", "paytm.insure", "mypaytm.com", "paytm.business", "fincollect.in", "creditmate.in", "gamepind.com", "insider.paytm.com", "pmltp.com", "finmate.tech", "cdo.paytm.com", "paytmoffers.in", "paytmmloyal.com", "ocltp.com", "paytm.ca", "quarkinfocom.com", "pibpltp.com", "paytmfirstgames.com", "paytmgic.com", "paytmwholesale.com", "paytmlabs.com", "info.paytmfirstgames.com", "acumengame.com", "robustinfo.com", "one97.sg"];
+            var domains = saved ? JSON.parse(saved) : defaultDomains;
             
             var list = document.getElementById("domainList");
             list.innerHTML = "";
@@ -56,7 +57,8 @@
             if (!input) return;
             
             var saved = Office.context.roamingSettings.get("TrustedDomains");
-            var domains = saved ? JSON.parse(saved) : ["paytm.com"];
+            var defaultDomains = ["paytmpayments.com", "paytmmoney.com", "paytminsurance.co.in", "paytmservices.com", "paytm.com", "powerplay.today", "inapaq.com", "paytmmall.io", "cloud.paytm.com", "firstgames.id", "ticketnew.com", "paytmmall.com", "paytmplay.com", "mobiquest.com", "fellowinfotech.com", "paytminsuretech.com", "alpineinfocom.com", "firstgames.in", "first.games", "paytmfoundation.org", "paytmforbusiness.in", "ps.paytm.com", "paytmcloud.in", "paytm.insure", "mypaytm.com", "paytm.business", "fincollect.in", "creditmate.in", "gamepind.com", "insider.paytm.com", "pmltp.com", "finmate.tech", "cdo.paytm.com", "paytmoffers.in", "paytmmloyal.com", "ocltp.com", "paytm.ca", "quarkinfocom.com", "pibpltp.com", "paytmfirstgames.com", "paytmgic.com", "paytmwholesale.com", "paytmlabs.com", "info.paytmfirstgames.com", "acumengame.com", "robustinfo.com", "one97.sg"];
+            var domains = saved ? JSON.parse(saved) : defaultDomains;
             
             if (domains.indexOf(input) === -1) {
                 domains.push(input);
@@ -71,7 +73,8 @@
 
         function removeDomain(domain) {
             var saved = Office.context.roamingSettings.get("TrustedDomains");
-            var domains = saved ? JSON.parse(saved) : ["paytm.com"];
+            var defaultDomains = ["paytmpayments.com", "paytmmoney.com", "paytminsurance.co.in", "paytmservices.com", "paytm.com", "powerplay.today", "inapaq.com", "paytmmall.io", "cloud.paytm.com", "firstgames.id", "ticketnew.com", "paytmmall.com", "paytmplay.com", "mobiquest.com", "fellowinfotech.com", "paytminsuretech.com", "alpineinfocom.com", "firstgames.in", "first.games", "paytmfoundation.org", "paytmforbusiness.in", "ps.paytm.com", "paytmcloud.in", "paytm.insure", "mypaytm.com", "paytm.business", "fincollect.in", "creditmate.in", "gamepind.com", "insider.paytm.com", "pmltp.com", "finmate.tech", "cdo.paytm.com", "paytmoffers.in", "paytmmloyal.com", "ocltp.com", "paytm.ca", "quarkinfocom.com", "pibpltp.com", "paytmfirstgames.com", "paytmgic.com", "paytmwholesale.com", "paytmlabs.com", "info.paytmfirstgames.com", "acumengame.com", "robustinfo.com", "one97.sg"];
+            var domains = saved ? JSON.parse(saved) : defaultDomains;
             
             domains = domains.filter(function(d) { return d !== domain; });
             Office.context.roamingSettings.set("TrustedDomains", JSON.stringify(domains));
