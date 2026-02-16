@@ -5,38 +5,110 @@
     <title>Confidentiality Warning</title>
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
     <style>
-        body { font-family: "Segoe UI", sans-serif; background-color: #FFF4CE; text-align: center; padding: 20px; color: #333; }
-        h1 { color: #C00000; font-size: 20px; margin-top: 0; }
-        p { font-size: 14px; margin-bottom: 20px; }
-        
-        .email-list { 
-            background: white; border: 1px solid #ccc; border-radius: 4px; 
-            padding: 10px; max-height: 100px; overflow-y: auto; text-align: left;
-            font-size: 13px; color: #d13438; font-weight: bold; margin-bottom: 20px;
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff; /* Clean white background */
+            color: #323130;
+            text-align: center;
+            padding: 20px 25px;
+            margin: 0;
+            box-sizing: border-box;
         }
-        ul { margin: 0; padding-left: 20px; }
+        h2 {
+            color: #D13438; /* Microsoft Error Red */
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        p {
+            font-size: 13px;
+            margin-bottom: 15px;
+            color: #323130;
+        }
         
-        .btn-group { display: flex; flex-direction: column; gap: 10px; }
-        .btn { padding: 12px 15px; font-size: 14px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
+        /* Light gray box for the emails */
+        .email-list-container {
+            background-color: #F3F2F1;
+            border: 1px solid #E1DFDD;
+            border-radius: 4px;
+            padding: 10px 15px;
+            text-align: left;
+            margin-bottom: 20px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        .email-list-container ul {
+            padding-left: 20px;
+            margin: 0;
+            list-style-type: disc;
+        }
+        /* Red bullets and red text */
+        .email-list-container li {
+            color: #D13438;
+            font-size: 13px;
+            font-weight: 600;
+            padding-bottom: 4px;
+        }
+
+        .confirmation-text {
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        /* Stacked Buttons */
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
         
-        .btn-send { background-color: #C00000; color: white; }
-        .btn-cancel { background-color: #E1DFDD; color: black; }
-        .btn:hover { opacity: 0.9; }
+        /* Solid Blue Cancel Button */
+        .btn-primary {
+            background-color: #0078D4;
+            color: #ffffff;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #005A9E;
+        }
+        
+        /* White Outline Send Button */
+        .btn-secondary {
+            background-color: #ffffff;
+            color: #323130;
+            border: 1px solid #8A8886;
+        }
+        .btn-secondary:hover {
+            background-color: #F3F2F1;
+        }
     </style>
 </head>
 <body>
-    <h1>⚠️ Confidentiality Warning</h1>
+
+    <h2>Confidentiality Warning</h2>
+    
     <p id="dynamicText">You are sending this email to * recipient outside:</p>
     
-    <div class="email-list">
-        <ul id="extList"></ul>
+    <div class="email-list-container">
+        <ul id="extList">
+            </ul>
     </div>
     
-    <p>Are you sure you want to send this email?</p>
+    <p class="confirmation-text">Are you sure you want to send this email?</p>
 
-    <div class="btn-group">
-        <button id="sendBtn" class="btn btn-send">Yes, Send Anyway</button>
-        <button id="cancelBtn" class="btn btn-cancel">No, Cancel</button>
+    <div class="button-group">
+        <button id="cancelBtn" class="btn-primary">No, Cancel Send</button>
+        <button id="sendBtn" class="btn-secondary">Yes, Send Anyway</button>
     </div>
 
     <script>
@@ -48,20 +120,22 @@
                 var emails = extString.split(',');
                 var listHtml = "";
                 for (var i = 0; i < emails.length; i++) {
-                    listHtml += "<li>" + emails[i] + "</li>";
+                    // Inject the emails as list items
+                    listHtml += "<li>" + emails[i].trim() + "</li>";
                 }
                 document.getElementById("extList").innerHTML = listHtml;
                 
+                // Dynamically update the count (1 recipient vs 2 recipients)
                 var recWord = emails.length === 1 ? "recipient" : "recipients";
                 document.getElementById("dynamicText").innerText = "You are sending this email to " + emails.length + " " + recWord + " outside:";
-                
             } else {
                 document.getElementById("extList").innerHTML = "<li>External recipients found</li>";
                 document.getElementById("dynamicText").innerText = "You are sending this email to recipients outside:";
             }
 
-            document.getElementById("sendBtn").onclick = function() { Office.context.ui.messageParent("allow"); };
+            // Bind the buttons to the Outlook actions
             document.getElementById("cancelBtn").onclick = function() { Office.context.ui.messageParent("cancel"); };
+            document.getElementById("sendBtn").onclick = function() { Office.context.ui.messageParent("allow"); };
         });
     </script>
 </body>
