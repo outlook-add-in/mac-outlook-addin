@@ -5,29 +5,65 @@
     <title>External Warning</title>
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
     <style>
-        body { font-family: "Segoe UI", sans-serif; background-color: #FFF4CE; text-align: center; padding: 20px; }
-        h1 { color: #C00000; font-size: 22px; }
-        p { font-size: 15px; margin-bottom: 25px; }
-        .btn { padding: 10px 15px; font-size: 14px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
-        .btn-send { background-color: #C00000; color: white; }
+        body { font-family: "Segoe UI", sans-serif; background-color: #FFF4CE; text-align: center; padding: 20px; color: #333; }
+        h1 { color: #C00000; font-size: 20px; margin-top: 0; }
+        p { font-size: 14px; margin-bottom: 10px; }
+        
+        /* Box to show the list of emails */
+        .email-list { 
+            background: white; border: 1px solid #ccc; border-radius: 4px; 
+            padding: 10px; max-height: 100px; overflow-y: auto; text-align: left;
+            font-size: 13px; color: #d13438; font-weight: bold; margin-bottom: 20px;
+        }
+        ul { margin: 0; padding-left: 20px; }
+        
+        /* Stack buttons vertically */
+        .btn-group { display: flex; flex-direction: column; gap: 10px; }
+        .btn { padding: 10px 15px; font-size: 14px; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
+        
         .btn-clean { background-color: #0078D4; color: white; font-weight: bold; }
+        .btn-send-all { background-color: #C00000; color: white; }
         .btn-cancel { background-color: #E1DFDD; color: black; }
+        .btn:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
-    <h1>⚠️ EXTERNAL RECIPIENT WARNING</h1>
-    <p>You are sending this email to people <b>outside</b> of your trusted list.</p>
+    <h1>⚠️ EXTERNAL RECIPIENTS FOUND</h1>
+    <p>You are about to send an email to the following external addresses:</p>
     
-    <div>
-        <button id="cancelBtn" class="btn btn-cancel">Cancel</button>
-        <button id="cleanBtn" class="btn btn-clean">Remove Externals & Send</button>
-        <button id="sendBtn" class="btn btn-send">Send Anyway</button>
+    <div class="email-list">
+        <ul id="extList">
+            </ul>
+    </div>
+    
+    <p>What would you like to do?</p>
+
+    <div class="btn-group">
+        <button id="cleanBtn" class="btn btn-clean">Remove Externals & Send to Rest</button>
+        <button id="sendAllBtn" class="btn btn-send-all">Send to Everyone Anyway</button>
+        <button id="cancelBtn" class="btn btn-cancel">Cancel (Let me edit manually)</button>
     </div>
 
     <script>
         Office.onReady(function() {
-            // Tell the background script what the user chose
-            document.getElementById("sendBtn").onclick = function() { Office.context.ui.messageParent("allow"); };
+            // 1. Extract the emails from the URL parameters
+            var urlParams = new URLSearchParams(window.location.search);
+            var extString = urlParams.get('ext');
+            
+            // 2. Display the emails in the HTML list
+            if (extString) {
+                var emails = extString.split(',');
+                var listHtml = "";
+                for (var i = 0; i < emails.length; i++) {
+                    listHtml += "<li>" + emails[i] + "</li>";
+                }
+                document.getElementById("extList").innerHTML = listHtml;
+            } else {
+                document.getElementById("extList").innerHTML = "<li>Unable to load list</li>";
+            }
+
+            // 3. Button Actions
+            document.getElementById("sendAllBtn").onclick = function() { Office.context.ui.messageParent("allow"); };
             document.getElementById("cancelBtn").onclick = function() { Office.context.ui.messageParent("cancel"); };
             document.getElementById("cleanBtn").onclick = function() { Office.context.ui.messageParent("remove_and_send"); };
         });
