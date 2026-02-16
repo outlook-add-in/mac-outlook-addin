@@ -1,5 +1,7 @@
 Office.onReady();
 
+var dialog;
+
 function checkExternalRecipients(event) {
     var item = Office.context.mailbox.item;
 
@@ -24,6 +26,7 @@ function checkExternalRecipients(event) {
         var recipients = result.value;
         var externalEmails = []; 
 
+        // 1. Scan Logic
         for (var i = 0; i < recipients.length; i++) {
             var email = recipients[i].emailAddress.toLowerCase();
             var isSafe = false;
@@ -38,35 +41,34 @@ function checkExternalRecipients(event) {
             }
         }
 
+        // 2. Open Dialog if External is Found
         if (externalEmails.length === 0) {
-            // Safe -> Send immediately
-            event.completed({ allowEvent: true });
+            event.completed({ allowEvent: true }); // Safe, send it
         } else {
-            // External Found -> Check if user is clicking "Send" for the second time
-            item.loadCustomPropertiesAsync(function (propResult) {
-                var props = propResult.value;
-                var warningStatus = props.get("WarningBypass"); 
+            var encodedEmails = encodeURIComponent(externalEmails.join(","));
+            var url = "https://vikash3pandey-sys.github.io/outlook-alerts/warning.html?ext=" + encodedEmails;
 
-                if (warningStatus === "yes") {
-                    // USER CLICKED SEND TWICE -> "Send Anyway"
-                    props.remove("WarningBypass");
-                    props.saveAsync(function() {
-                         event.completed({ allowEvent: true });
-                    });
-                } else {
-                    // FIRST CLICK -> Show native warning banner inside the email
-                    props.set("WarningBypass", "yes");
-                    props.saveAsync(function() {
-                        var recWord = externalEmails.length === 1 ? "recipient" : "recipients";
-                        var bannerText = "Confidentiality Warning: You are sending to " + externalEmails.length + " external " + recWord + " outside Paytm. Click 'Send' again to send anyway.";
+            // Open the Custom Warning Window
+            Office.context.ui.displayDialogAsync(url, { height: 45, width: 30, displayInIframe: true },
+                function (asyncResult) {
+                    if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+                        event.completed({ allowEvent: false, errorMessage: "Security Check Failed." });
+                    } else {
+                        dialog = asyncResult.value;
                         
-                        event.completed({ 
-                            allowEvent: false, 
-                            errorMessage: bannerText
+                        // Wait for the user to click a button in the pop-up
+                        dialog.addEventHandler(Office.EventType.DialogMessageReceived, function(arg) {
+                            dialog.close(); 
+                            
+                            if (arg.message === "allow") {
+                                event.completed({ allowEvent: true }); // User clicked Send Anyway
+                            } else {
+                                event.completed({ allowEvent: false }); // User clicked Cancel
+                            }
                         });
-                    });
+                    }
                 }
-            });
+            );
         }
     });
 }
