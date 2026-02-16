@@ -7,86 +7,74 @@
     <style>
         body { 
             font-family: "Segoe UI", sans-serif; 
-            background-color: #FFFFFF; /* Pure white background */
-            color: #000000; /* Pure black text */
+            background-color: #FFFFFF; 
+            color: #333333; 
             text-align: center; 
             padding: 20px; 
+            margin: 0;
         }
         h1 { 
-            font-size: 20px; 
+            font-size: 18px; 
+            color: #D13438; /* Subtle Red */
             margin-top: 0; 
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 2px solid #000;
             padding-bottom: 10px;
+            border-bottom: 1px solid #E1DFDD;
         }
-        p { 
-            font-size: 14px; 
-            margin-bottom: 20px; 
-        }
+        p { font-size: 14px; margin-bottom: 15px; }
         
-        /* Box to show the list of emails */
         .email-list { 
-            background: #FFFFFF; 
-            border: 1px solid #000000; 
+            background: #F3F2F1; 
+            border: 1px solid #E1DFDD; 
+            border-radius: 4px;
             padding: 10px; 
-            max-height: 100px; 
+            max-height: 90px; 
             overflow-y: auto; 
             text-align: left;
             font-size: 13px; 
-            font-weight: bold; 
+            color: #D13438;
+            font-weight: 600; 
             margin-bottom: 20px;
         }
         ul { margin: 0; padding-left: 20px; }
         
-        /* Stack buttons */
         .btn-group { display: flex; flex-direction: column; gap: 10px; }
         .btn { 
-            padding: 12px 15px; 
+            padding: 10px 15px; 
             font-size: 14px; 
+            border-radius: 4px;
             cursor: pointer; 
             width: 100%; 
             font-weight: bold; 
+            border: none;
         }
         
-        /* Black and White Buttons */
-        .btn-send { 
-            background-color: #FFFFFF; 
-            color: #000000; 
-            border: 2px solid #000000;
-        }
-        .btn-cancel { 
-            background-color: #000000; 
-            color: #FFFFFF; 
-            border: 2px solid #000000;
-        }
-        .btn:hover { opacity: 0.7; }
+        .btn-cancel { background-color: #0078D4; color: white; } /* Blue primary button */
+        .btn-send { background-color: #FFFFFF; color: #333333; border: 1px solid #8A8886; } /* Outlined secondary */
+        
+        .btn:hover { opacity: 0.8; }
     </style>
 </head>
 <body>
     <h1>Confidentiality Warning</h1>
     
-    <p id="dynamicText">You are sending this email to * recipient outside:</p>
+    <p id="dynamicText">You are sending this email to external recipients:</p>
     
     <div class="email-list">
-        <ul id="extList">
-            </ul>
+        <ul id="extList"></ul>
     </div>
     
     <p>Are you sure you want to send this email?</p>
 
     <div class="btn-group">
-        <button id="cancelBtn" class="btn btn-cancel">No, Cancel</button>
+        <button id="cancelBtn" class="btn btn-cancel">No, Cancel Send</button>
         <button id="sendBtn" class="btn btn-send">Yes, Send Anyway</button>
     </div>
 
     <script>
         Office.onReady(function() {
-            // Get emails from the URL
             var urlParams = new URLSearchParams(window.location.search);
             var extString = urlParams.get('ext');
             
-            // List the emails in the box and update the text
             if (extString) {
                 var emails = extString.split(',');
                 var listHtml = "";
@@ -95,16 +83,11 @@
                 }
                 document.getElementById("extList").innerHTML = listHtml;
                 
-                // Dynamically replace the "*" with the actual number of recipients
                 var recWord = emails.length === 1 ? "recipient" : "recipients";
-                document.getElementById("dynamicText").innerText = "You are sending this email to " + emails.length + " " + recWord + " outside:";
-                
-            } else {
-                document.getElementById("extList").innerHTML = "<li>External recipients found</li>";
-                document.getElementById("dynamicText").innerText = "You are sending this email to recipients outside:";
+                document.getElementById("dynamicText").innerText = "You are sending this email to " + emails.length + " " + recWord + " outside Paytm:";
             }
 
-            // Button Logic: Allow or Cancel
+            // Send messages back to the background script
             document.getElementById("sendBtn").onclick = function() { Office.context.ui.messageParent("allow"); };
             document.getElementById("cancelBtn").onclick = function() { Office.context.ui.messageParent("cancel"); };
         });
