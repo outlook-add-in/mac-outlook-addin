@@ -18,15 +18,10 @@ function checkExternalRecipients(event) {
         "acumengame.com", "robustinfo.com", "one97.sg"
     ];
 
-    item.to.getAsync(function(result) {
-        if (result.status !== Office.AsyncResultStatus.Succeeded) {
-            event.completed({ allowEvent: true });
-            return;
-        }
-
-        var recipients = result.value;
+    // Helper Function: Processes the gathered emails and triggers the popup if needed
+    function processRecipients(recipients) {
         var externalEmails = []; 
-
+        
         for (var i = 0; i < recipients.length; i++) {
             var email = recipients[i].emailAddress.toLowerCase();
             var isSafe = false;
@@ -43,9 +38,9 @@ function checkExternalRecipients(event) {
         }
 
         if (externalEmails.length === 0) {
-            event.completed({ allowEvent: true });
+            event.completed({ allowEvent: true }); // Safe, send it
         } else {
-            // UPDATED URL HERE
+            // Externals found, open the UI
             var encodedEmails = encodeURIComponent(externalEmails.join(","));
             var url = "https://outlook-add-in.github.io/mac-outlook-addin/warning.html?ext=" + encodedEmails;
 
@@ -58,7 +53,6 @@ function checkExternalRecipients(event) {
                         
                         dialog.addEventHandler(Office.EventType.DialogMessageReceived, function(arg) {
                             dialog.close(); 
-                            
                             if (arg.message === "allow") {
                                 event.completed({ allowEvent: true }); 
                             } else {
@@ -69,5 +63,34 @@ function checkExternalRecipients(event) {
                 }
             );
         }
-    });
+    }
+
+    // --- NEW LOGIC: Check if it is a Calendar Invite or an Email ---
+    
+    if (item.itemType === Office.MailboxEnums.ItemType.Appointment) {
+        // IT IS A CALENDAR INVITE: Check Required and Optional Attendees
+        item.requiredAttendees.getAsync(function(reqResult) {
+            var allAttendees = reqResult.status === Office.AsyncResultStatus.Succeeded ? reqResult.value : [];
+            
+            item.optionalAttendees.getAsync(function(optResult) {
+                if (optResult.status === Office.AsyncResultStatus.Succeeded) {
+                    allAttendees = allAttendees.concat(optResult.value);
+                }
+                processRecipients(allAttendees);
+            });
+        });
+        
+    } else {
+        // IT IS AN EMAIL: Check TO and CC lines
+        item.to.getAsync(function(toResult) {
+            var allRecipients = toResult.status === Office.AsyncResultStatus.Succeeded ? toResult.value : [];
+            
+            item.cc.getAsync(function(ccResult) {
+                if (ccResult.status === Office.AsyncResultStatus.Succeeded) {
+                    allRecipients = allRecipients.concat(ccResult.value);
+                }
+                processRecipients(allRecipients);
+            });
+        });
+    }
 }
