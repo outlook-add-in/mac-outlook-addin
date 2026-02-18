@@ -5,16 +5,92 @@
     <title>Safe Send Settings</title>
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
     <style>
-        body { font-family: "Segoe UI", sans-serif; padding: 15px; background: #f4f4f4; }
-        .card { background: white; padding: 15px; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        h3 { margin-top: 0; font-size: 16px; color: #333; }
-        p { font-size: 12px; color: #666; }
-        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        input[type="text"] { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        button.btn-add { background: #0078D4; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
-        ul { list-style: none; padding: 0; margin: 0; }
-        li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14px; }
-        .btn-remove { color: #d13438; background: none; border: none; cursor: pointer; font-size: 12px; }
+        body { 
+            font-family: "Segoe UI", sans-serif; 
+            padding: 15px; 
+            background: #f4f4f4; 
+        }
+        .card { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 5px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            margin-bottom: 15px; 
+        }
+        h3 { 
+            margin-top: 0; 
+            font-size: 16px; 
+            color: #333; 
+        }
+        p { 
+            font-size: 12px; 
+            color: #666; 
+        }
+        .input-group { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 15px; 
+        }
+        input[type="text"] { 
+            flex: 1; 
+            padding: 8px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+        }
+        button.btn-add { 
+            background: #0078D4; 
+            color: white; 
+            border: none; 
+            padding: 8px 15px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+        }
+        button.btn-add:hover {
+            background: #005A9E;
+        }
+        ul { 
+            list-style: none; 
+            padding: 0; 
+            margin: 0; 
+        }
+        li { 
+            display: flex; 
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0; 
+            border-bottom: 1px solid #eee; 
+            font-size: 14px; 
+        }
+        .domain-text {
+            flex: 1;
+            word-break: break-word;
+        }
+        .btn-remove { 
+            color: #d13438; 
+            background: none; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 12px; 
+            padding: 4px 8px;
+            white-space: nowrap;
+        }
+        .btn-remove:hover {
+            text-decoration: underline;
+        }
+        .error-msg {
+            color: #d13438;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        .success-msg {
+            color: #107C10;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -27,58 +103,311 @@
             <button id="addBtn" class="btn-add">Add</button>
         </div>
 
-        <ul id="domainList">
-            </ul>
+        <ul id="domainList"></ul>
+        <div id="statusMsg"></div>
     </div>
 
     <script>
+        // ✅ FIXED: Sanitize domain input
+        function sanitizeDomain(domain) {
+            if (!domain || typeof domain !== 'string') return '';
+            return domain.toLowerCase().trim();
+        }
+
+        // ✅ FIXED: Validate domain format
+        function isValidDomain(domain) {
+            if (!domain) return false;
+            // Simple domain validation - must have at least one dot and valid characters
+            var domainRegex = /^[a-z0-9.-]+\.[a-z]{2,}$/i;
+            return domainRegex.test(domain);
+        }
+
+        // ✅ FIXED: Show status message
+        function showStatus(message, isError) {
+            try {
+                var statusDiv = document.getElementById("statusMsg");
+                if (!statusDiv) return;
+
+                statusDiv.className = isError ? "error-msg" : "success-msg";
+                statusDiv.textContent = message;
+                
+                // Auto-clear success messages after 3 seconds
+                if (!isError) {
+                    setTimeout(function() {
+                        statusDiv.textContent = "";
+                        statusDiv.className = "";
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error("Error showing status:", error);
+            }
+        }
+
+        // ✅ FIXED: Safe domain list population using DOM methods
+        function loadDomains() {
+            try {
+                var domainList = document.getElementById("domainList");
+                if (!domainList) {
+                    console.error("domainList element not found");
+                    showStatus("Error: UI not properly initialized", true);
+                    return;
+                }
+
+                // Clear existing items
+                domainList.innerHTML = "";
+
+                // Load saved domains from Outlook settings
+                var saved = null;
+                try {
+                    saved = Office.context.roamingSettings.get("TrustedDomains");
+                } catch (error) {
+                    console.error("Error reading roaming settings:", error);
+                }
+
+                var domains = [];
+                if (saved) {
+                    try {
+                        domains = JSON.parse(saved);
+                    } catch (parseError) {
+                        console.error("Error parsing saved domains:", parseError);
+                        domains = ["paytm.com"];
+                    }
+                } else {
+                    domains = ["paytm.com"];
+                }
+
+                // Validate domains array
+                if (!Array.isArray(domains)) {
+                    domains = ["paytm.com"];
+                }
+
+                // ✅ Use createElement + appendChild instead of innerHTML
+                domains.forEach(function(domain) {
+                    try {
+                        var sanitized = sanitizeDomain(domain);
+                        if (sanitized) {
+                            var listItem = document.createElement("li");
+                            
+                            // Create domain text span
+                            var domainText = document.createElement("span");
+                            domainText.className = "domain-text";
+                            // ✅ Use textContent to avoid XSS
+                            domainText.textContent = sanitized;
+                            
+                            // Create remove button
+                            var removeBtn = document.createElement("button");
+                            removeBtn.className = "btn-remove";
+                            removeBtn.textContent = "Remove";
+                            
+                            // ✅ Use addEventListener instead of inline onclick
+                            removeBtn.addEventListener("click", function() {
+                                removeDomain(sanitized);
+                            });
+                            
+                            listItem.appendChild(domainText);
+                            listItem.appendChild(removeBtn);
+                            domainList.appendChild(listItem);
+                        }
+                    } catch (error) {
+                        console.error("Error processing domain:", domain, error);
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error loading domains:", error);
+                showStatus("Error loading domains", true);
+            }
+        }
+
+        // ✅ FIXED: Safe add domain function
+        function addDomain() {
+            try {
+                var input = document.getElementById("newDomain");
+                if (!input) {
+                    console.error("Input element not found");
+                    return;
+                }
+
+                var domain = sanitizeDomain(input.value);
+                
+                if (!domain) {
+                    showStatus("Please enter a domain name", true);
+                    return;
+                }
+
+                if (!isValidDomain(domain)) {
+                    showStatus("Invalid domain format (e.g. example.com)", true);
+                    return;
+                }
+
+                // Get current domains
+                var saved = null;
+                try {
+                    saved = Office.context.roamingSettings.get("TrustedDomains");
+                } catch (error) {
+                    console.error("Error reading roaming settings:", error);
+                }
+
+                var domains = [];
+                if (saved) {
+                    try {
+                        domains = JSON.parse(saved);
+                    } catch (parseError) {
+                        console.error("Error parsing saved domains:", parseError);
+                    }
+                }
+
+                if (!Array.isArray(domains)) {
+                    domains = [];
+                }
+
+                // Check if domain already exists
+                var exists = domains.some(function(d) {
+                    return sanitizeDomain(d) === domain;
+                });
+
+                if (exists) {
+                    showStatus("This domain is already in your trusted list", true);
+                    return;
+                }
+
+                // Add new domain
+                domains.push(domain);
+
+                // Save to roaming settings
+                try {
+                    Office.context.roamingSettings.set("TrustedDomains", JSON.stringify(domains));
+                    Office.context.roamingSettings.saveAsync(function(asyncResult) {
+                        try {
+                            if (asyncResult.status === Office.AsyncResultStatus.Succeeded) {
+                                input.value = "";
+                                loadDomains();
+                                showStatus("Domain added successfully", false);
+                            } else {
+                                console.error("Save failed:", asyncResult.error);
+                                showStatus("Failed to save domain", true);
+                            }
+                        } catch (error) {
+                            console.error("Error in saveAsync callback:", error);
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error saving to roaming settings:", error);
+                    showStatus("Error saving domain: " + error.message, true);
+                }
+
+            } catch (error) {
+                console.error("Error in addDomain:", error);
+                showStatus("Error adding domain: " + error.message, true);
+            }
+        }
+
+        // ✅ FIXED: Safe remove domain function
+        function removeDomain(domain) {
+            try {
+                var sanitized = sanitizeDomain(domain);
+                if (!sanitized) {
+                    console.error("Invalid domain to remove");
+                    return;
+                }
+
+                // Get current domains
+                var saved = null;
+                try {
+                    saved = Office.context.roamingSettings.get("TrustedDomains");
+                } catch (error) {
+                    console.error("Error reading roaming settings:", error);
+                }
+
+                var domains = [];
+                if (saved) {
+                    try {
+                        domains = JSON.parse(saved);
+                    } catch (parseError) {
+                        console.error("Error parsing saved domains:", parseError);
+                    }
+                }
+
+                if (!Array.isArray(domains)) {
+                    domains = [];
+                }
+
+                // Remove the domain
+                domains = domains.filter(function(d) {
+                    return sanitizeDomain(d) !== sanitized;
+                });
+
+                // Save updated list
+                try {
+                    Office.context.roamingSettings.set("TrustedDomains", JSON.stringify(domains));
+                    Office.context.roamingSettings.saveAsync(function(asyncResult) {
+                        try {
+                            if (asyncResult.status === Office.AsyncResultStatus.Succeeded) {
+                                loadDomains();
+                                showStatus("Domain removed successfully", false);
+                            } else {
+                                console.error("Save failed:", asyncResult.error);
+                                showStatus("Failed to remove domain", true);
+                            }
+                        } catch (error) {
+                            console.error("Error in saveAsync callback:", error);
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error saving to roaming settings:", error);
+                    showStatus("Error removing domain: " + error.message, true);
+                }
+
+            } catch (error) {
+                console.error("Error in removeDomain:", error);
+                showStatus("Error removing domain: " + error.message, true);
+            }
+        }
+
+        // ✅ FIXED: Initialize with proper error handling
         Office.onReady(function(info) {
-            if (info.host === Office.HostType.Outlook) {
-                loadDomains();
-                document.getElementById("addBtn").onclick = addDomain;
+            try {
+                if (info.host === Office.HostType.Outlook) {
+                    loadDomains();
+                    
+                    // ✅ Use addEventListener instead of inline onclick
+                    var addBtn = document.getElementById("addBtn");
+                    if (addBtn) {
+                        addBtn.addEventListener("click", addDomain);
+                        
+                        // ✅ Allow adding domain by pressing Enter
+                        var newDomainInput = document.getElementById("newDomain");
+                        if (newDomainInput) {
+                            newDomainInput.addEventListener("keypress", function(event) {
+                                if (event.key === "Enter") {
+                                    addDomain();
+                                }
+                            });
+                        }
+                    } else {
+                        console.error("Add button not found");
+                    }
+                } else {
+                    console.error("Not running in Outlook");
+                    showStatus("Error: This panel requires Outlook", true);
+                }
+            } catch (error) {
+                console.error("Error in Office.onReady:", error);
+                showStatus("Initialization error: " + error.message, true);
             }
         });
 
-        function loadDomains() {
-            // Read saved settings from Outlook
-            var saved = Office.context.roamingSettings.get("TrustedDomains");
-            var domains = saved ? JSON.parse(saved) : ["paytm.com"];
-            
-            var list = document.getElementById("domainList");
-            list.innerHTML = "";
-            domains.forEach(function(d) {
-                list.innerHTML += "<li>" + d + " <button class='btn-remove' onclick='removeDomain(\"" + d + "\")'>Remove</button></li>";
-            });
-        }
-
-        function addDomain() {
-            var input = document.getElementById("newDomain").value.toLowerCase().trim();
-            if (!input) return;
-            
-            var saved = Office.context.roamingSettings.get("TrustedDomains");
-            var domains = saved ? JSON.parse(saved) : ["paytm.com"];
-            
-            if (domains.indexOf(input) === -1) {
-                domains.push(input);
-                // Save settings to the cloud
-                Office.context.roamingSettings.set("TrustedDomains", JSON.stringify(domains));
-                Office.context.roamingSettings.saveAsync(function() {
-                    loadDomains();
-                    document.getElementById("newDomain").value = "";
-                });
+        // ✅ FIXED: Fallback initialization
+        window.addEventListener('load', function() {
+            try {
+                var domainList = document.getElementById("domainList");
+                if (domainList && domainList.children.length === 0) {
+                    setTimeout(loadDomains, 500);
+                }
+            } catch (error) {
+                console.error("Error in load event:", error);
             }
-        }
-
-        function removeDomain(domain) {
-            var saved = Office.context.roamingSettings.get("TrustedDomains");
-            var domains = saved ? JSON.parse(saved) : ["paytm.com"];
-            
-            domains = domains.filter(function(d) { return d !== domain; });
-            Office.context.roamingSettings.set("TrustedDomains", JSON.stringify(domains));
-            Office.context.roamingSettings.saveAsync(function() {
-                loadDomains();
-            });
-        }
+        });
     </script>
 </body>
 </html>
