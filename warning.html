@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #ffffff; /* Clean white background */
+            background-color: #ffffff;
             color: #323130;
             text-align: center;
             padding: 20px 25px;
@@ -15,7 +15,7 @@
             box-sizing: border-box;
         }
         h2 {
-            color: #D13438; /* Microsoft Error Red */
+            color: #D13438;
             font-size: 18px;
             font-weight: 600;
             margin-top: 0;
@@ -27,7 +27,6 @@
             color: #323130;
         }
         
-        /* Light gray box for the emails */
         .email-list-container {
             background-color: #F3F2F1;
             border: 1px solid #E1DFDD;
@@ -43,12 +42,12 @@
             margin: 0;
             list-style-type: disc;
         }
-        /* Red bullets and red text */
         .email-list-container li {
             color: #D13438;
             font-size: 13px;
             font-weight: 600;
             padding-bottom: 4px;
+            word-break: break-all;
         }
 
         .confirmation-text {
@@ -56,7 +55,6 @@
             margin-bottom: 20px;
         }
 
-        /* Stacked Buttons */
         .button-group {
             display: flex;
             flex-direction: column;
@@ -72,7 +70,6 @@
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        /* Solid Blue Cancel Button */
         .btn-primary {
             background-color: #0078D4;
             color: #ffffff;
@@ -82,7 +79,6 @@
             background-color: #005A9E;
         }
         
-        /* White Outline Send Button */
         .btn-secondary {
             background-color: #ffffff;
             color: #323130;
@@ -91,17 +87,31 @@
         .btn-secondary:hover {
             background-color: #F3F2F1;
         }
+
+        .error-msg {
+            color: #d13438;
+            font-size: 12px;
+            margin-top: 10px;
+            display: none;
+        }
+        .error-msg.show {
+            display: block;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
 
     <h2>Confidentiality Warning</h2>
     
-    <p id="dynamicText">You are sending this email to * recipient outside:</p>
+    <p id="dynamicText">You are sending this email to recipients outside:</p>
     
     <div class="email-list-container">
-        <ul id="extList">
-            </ul>
+        <ul id="extList"></ul>
     </div>
     
     <p class="confirmation-text">Are you sure you want to send this email?</p>
@@ -111,31 +121,182 @@
         <button id="sendBtn" class="btn-secondary">Yes, Send Anyway</button>
     </div>
 
-    <script>
-        Office.onReady(function() {
-            var urlParams = new URLSearchParams(window.location.search);
-            var extString = urlParams.get('ext');
-            
-            if (extString) {
-                var emails = extString.split(',');
-                var listHtml = "";
-                for (var i = 0; i < emails.length; i++) {
-                    // Inject the emails as list items
-                    listHtml += "<li>" + emails[i].trim() + "</li>";
-                }
-                document.getElementById("extList").innerHTML = listHtml;
-                
-                // Dynamically update the count (1 recipient vs 2 recipients)
-                var recWord = emails.length === 1 ? "recipient" : "recipients";
-                document.getElementById("dynamicText").innerText = "You are sending this email to " + emails.length + " " + recWord + " outside:";
-            } else {
-                document.getElementById("extList").innerHTML = "<li>External recipients found</li>";
-                document.getElementById("dynamicText").innerText = "You are sending this email to recipients outside:";
-            }
+    <div id="errorMsg" class="error-msg"></div>
 
-            // Bind the buttons to the Outlook actions
-            document.getElementById("cancelBtn").onclick = function() { Office.context.ui.messageParent("cancel"); };
-            document.getElementById("sendBtn").onclick = function() { Office.context.ui.messageParent("allow"); };
+    <script>
+        // ✅ FIXED: Safe function to populate email list
+        function populateEmailList(emails) {
+            try {
+                var extList = document.getElementById("extList");
+                if (!extList) {
+                    console.error("Element 'extList' not found");
+                    showError("Error: UI not properly initialized");
+                    return false;
+                }
+
+                // Clear existing items
+                extList.innerHTML = "";
+
+                // Validate input
+                if (!Array.isArray(emails) || emails.length === 0) {
+                    var emptyItem = document.createElement("li");
+                    emptyItem.textContent = "No external recipients found";
+                    extList.appendChild(emptyItem);
+                    return true;
+                }
+
+                // ✅ Use createElement + appendChild instead of innerHTML string concat
+                for (var i = 0; i < emails.length; i++) {
+                    var email = emails[i].trim();
+                    
+                    if (email) {
+                        var listItem = document.createElement("li");
+                        // ✅ Use textContent to auto-escape HTML characters
+                        listItem.textContent = email;
+                        extList.appendChild(listItem);
+                    }
+                }
+
+                return true;
+            } catch (error) {
+                console.error("Error populating email list:", error);
+                showError("Failed to display email list");
+                return false;
+            }
+        }
+
+        // ✅ FIXED: Safe function to update dynamic text
+        function updateDynamicText(emailCount) {
+            try {
+                var dynamicText = document.getElementById("dynamicText");
+                if (!dynamicText) {
+                    console.error("Element 'dynamicText' not found");
+                    return false;
+                }
+
+                var recWord = emailCount === 1 ? "recipient" : "recipients";
+                // ✅ Use textContent instead of innerHTML
+                dynamicText.textContent = "You are sending this email to " + emailCount + " " + recWord + " outside:";
+                return true;
+            } catch (error) {
+                console.error("Error updating dynamic text:", error);
+                return false;
+            }
+        }
+
+        // ✅ FIXED: Safe error display
+        function showError(message) {
+            try {
+                var errorDiv = document.getElementById("errorMsg");
+                if (errorDiv) {
+                    errorDiv.textContent = message;
+                    errorDiv.classList.add("show");
+                }
+            } catch (error) {
+                console.error("Error displaying error message:", error);
+            }
+        }
+
+        // ✅ FIXED: Safe button initialization
+        function initializeButtons() {
+            try {
+                var cancelBtn = document.getElementById("cancelBtn");
+                var sendBtn = document.getElementById("sendBtn");
+
+                if (!cancelBtn || !sendBtn) {
+                    console.error("Buttons not found in DOM");
+                    showError("Error: Buttons not initialized");
+                    return false;
+                }
+
+                // ✅ Add error handling to button handlers
+                cancelBtn.onclick = function() {
+                    try {
+                        Office.context.ui.messageParent("cancel");
+                    } catch (error) {
+                        console.error("Error sending cancel message:", error);
+                        showError("Error: Could not process cancel action");
+                    }
+                };
+
+                sendBtn.onclick = function() {
+                    try {
+                        Office.context.ui.messageParent("allow");
+                    } catch (error) {
+                        console.error("Error sending allow message:", error);
+                        showError("Error: Could not process send action");
+                    }
+                };
+
+                return true;
+            } catch (error) {
+                console.error("Error initializing buttons:", error);
+                return false;
+            }
+        }
+
+        // ✅ FIXED: Main initialization with comprehensive error handling
+        function initializeDialog() {
+            try {
+                // 1. Extract emails from URL parameters
+                var urlParams = new URLSearchParams(window.location.search);
+                var extString = urlParams.get('ext');
+
+                // 2. Parse and validate emails
+                var emails = [];
+                if (extString && extString.trim()) {
+                    // ✅ Decode URL-encoded string
+                    var decodedString = decodeURIComponent(extString);
+                    emails = decodedString.split(',').filter(function(e) {
+                        return e.trim().length > 0;
+                    });
+                }
+
+                // 3. Populate email list
+                if (!populateEmailList(emails)) {
+                    console.warn("Failed to populate email list");
+                }
+
+                // 4. Update dynamic text
+                if (!updateDynamicText(emails.length)) {
+                    console.warn("Failed to update dynamic text");
+                }
+
+                // 5. Initialize buttons
+                if (!initializeButtons()) {
+                    console.warn("Failed to initialize buttons");
+                }
+
+            } catch (error) {
+                console.error("Error initializing dialog:", error);
+                showError("Initialization error: " + error.message);
+            }
+        }
+
+        // ✅ FIXED: Call initialization when Office is ready
+        Office.onReady(function(info) {
+            try {
+                if (info.host === Office.HostType.Outlook) {
+                    initializeDialog();
+                } else {
+                    showError("Error: This dialog requires Outlook");
+                }
+            } catch (error) {
+                console.error("Error in Office.onReady:", error);
+                showError("Office initialization error");
+            }
+        });
+
+        // ✅ FIXED: Fallback initialization
+        window.addEventListener('load', function() {
+            try {
+                var extList = document.getElementById("extList");
+                if (extList && extList.children.length === 0) {
+                    setTimeout(initializeDialog, 500);
+                }
+            } catch (error) {
+                console.error("Error in load event:", error);
+            }
         });
     </script>
 </body>
